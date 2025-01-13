@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link href="https://fonts.googleapis.com/css2?family=IM+Fell+English+SC&display=swap" rel="stylesheet">
+    <title>Faction and City Renown Tracker</title>
+    <style>
+    body {
+        font-family: 'IM Fell English SC', serif;
+        background: linear-gradient(to bottom, #2e1a14, #4a3326);
+        color: #f8e8c0;
+        margin: 0;
+        padding: 0;
+    }
+    h1 {
+        text-align: center;
+        color: #ffdd8b;
+        text-shadow: 2px 2px 5px #522b0d;
+    }
+    p {
+        text-align: center;
+        font-size: 1.2em;
+        margin-bottom: 20px;
+        color: #ffefc2;
+    }
+    table {
+        border-collapse: collapse;
+        width: 95%;
+        margin: 20px auto;
+        background: rgba(255, 248, 228, 0.9);
+        border: 2px solid #523c23;
+        box-shadow: 0 0 15px #000;
+    }
+    th, td {
+        border: 1px solid #b98d57;
+        padding: 10px;
+        text-align: center;
+    }
+    th {
+        background: #7a5224;
+        color: #f8e8c0;
+        font-size: 1.2em;
+        text-shadow: 1px 1px 2px #000;
+    }
+    td {
+        color: #3e281a;
+    }
+    input {
+        width: 80px;
+        text-align: center;
+        border: 1px solid #7a5224;
+        border-radius: 5px;
+        padding: 5px;
+        background: #fdf8f3;
+    }
+    input:focus {
+        outline: none;
+        border-color: #d7b37c;
+        background: #fff2db;
+    }
+    .renown-bar {
+        height: 20px;
+        width: 100%;
+        background-color: #d7b37c;
+        border-radius: 5px;
+        overflow: hidden;
+        position: relative;
+    }
+    .renown-level {
+        height: 100%;
+        text-align: right;
+        color: #fff;
+        padding-right: 5px;
+        box-sizing: border-box;
+        font-weight: bold;
+    }
+    .positive {
+        background: linear-gradient(to right, #2e8b57, #66cdaa);
+    }
+    .neutral {
+        background: linear-gradient(to right, #4682b4, #87cefa);
+    }
+    .negative {
+        background: linear-gradient(to right, #b22222, #dc143c);
+    }
+    #resetButton {
+        background: #7a5224;
+        color: #f8e8c0;
+        font-size: 1.1em;
+        padding: 10px 20px;
+        border: 2px solid #b98d57;
+        border-radius: 10px;
+        box-shadow: 0 0 10px #000;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    #resetButton:hover {
+        background: #d7b37c;
+        color: #522b0d;
+        border-color: #ffd700;
+        box-shadow: 0 0 15px #ffdd8b;
+    }
+    .tooltip {
+        display: none;
+        position: absolute;
+        background-color: #7a5224;
+        color: #f8e8c0;
+        border: 1px solid #d7b37c;
+        padding: 10px;
+        font-size: 14px;
+        border-radius: 5px;
+        z-index: 1000;
+        box-shadow: 0 0 10px #000;
+    }
+</style>
+
+</head>
+<body>
+    <h1 style="text-align: center;">Faction and City Renown Tracker</h1>
+    <p style="text-align: center;">Hover over a faction or city to see detailed bonuses/penalties. Changes are saved automatically and persist between sessions.</p>
+    <div id="tooltip" class="tooltip"></div>
+    <table>
+        <thead>
+            <tr>
+                <th>Faction/City</th>
+                <th>Base Renown</th>
+                <th>Party Actions</th>
+                <th>Cross-Faction Modifiers</th>
+                <th>Total Renown</th>
+                <th>Renown Level</th>
+            </tr>
+        </thead>
+        <tbody id="renownTable">
+            <!-- Rows populated by JavaScript -->
+        </tbody>
+    </table>
+<div style="text-align: center; margin-top: 20px;">
+    <button id="resetButton" onclick="resetRenown()">Reset Renown</button>
+</div>
+<div style="text-align: center; margin-top: 20px;">
+    <button onclick="exportData()">Export Renown</button>
+    <button onclick="importData()">Import Renown</button>
+    <input type="file" id="importFile" style="display: none;" onchange="handleImport(event)">
+</div>
+
+
+    <script>
+
+const relationshipTable = {
+    "Horizon Guard": {
+        friends: [],
+        enemies: ["Abyssal Blades", "Azure Syndicate", "Pirates"]
+    },
+    "Abyssal Blades": {
+        friends: ["Ebon Oath"],
+        enemies: ["Horizon Guard", "Azure Syndicate"]
+    },
+    "Azure Syndicate": {
+        friends: ["Gilded Corsairs"],
+        enemies: ["Bloody Tide", "Horizon Guard"]
+    },
+    "Gilded Corsairs": {
+        friends: ["Azure Syndicate"],
+        enemies: ["Bloody Tide", "Driftwood Marauders"]
+    },
+    "Bloody Tide": {
+        friends: [],
+        enemies: ["Everyone"] // Universally hated
+    },
+    "Ebon Oath": {
+        friends: ["Abyssal Blades"],
+        enemies: ["Halcyona", "Horizon Guard"]
+    },
+    "Shadowfang Fleet": {
+        friends: ["Ebon Oath"],
+        enemies: ["Thunderclaw Reavers"]
+    },
+    "Driftwood Marauders": {
+        friends: ["Thunderclaw Reavers"],
+        enemies: ["Gilded Corsairs"]
+    },
+    "Siren’s Grasp": {
+        friends: ["Azure Syndicate"],
+        enemies: ["Frostfang Raiders"]
+    },
+    "Thunderclaw Reavers": {
+        friends: ["Driftwood Marauders"],
+        enemies: ["Shadowfang Fleet", "Bloody Tide"]
+    },
+    "Frostfang Raiders": {
+        friends: [],
+        enemies: ["Siren’s Grasp", "Horizon Guard"]
+    },
+    "City: Olivara": {
+        friends: ["Horizon Guard"],
+        enemies: ["Bloody Tide"]
+    },
+    "City: Azurin": {
+        friends: ["Pirates"],
+        enemies: ["Horizon Guard"]
+    },
+    "City: Quintara": {
+        friends: ["Horizon Guard", "Azure Syndicate"],
+        enemies: ["Abyssal Blades"]
+    },
+    "City: Halcyona": {
+        friends: ["Horizon Guard", "Halcyona Scholars"],
+        enemies: ["Ebon Oath"]
+    },
+    "City: Tritonus": {
+        friends: ["Horizon Guard", "Azure Syndicate"],
+        enemies: ["Bloody Tide"]
+    }
+};
+
+        const factions = [
+            { name: "Horizon Guard", bonuses: {
+                "-100": "Full bounty issued; attacked on sight.",
+                "-80": "Guard pursues the party aggressively.",
+                "-60": "Docking privileges denied.",
+                "-40": "Frequent inspections delay travel.",
+                "-20": "Guard is suspicious and unfriendly.",
+                "0": "Neutral stance; standard naval behavior.",
+                "20": "Minor supplies provided for free.",
+                "40": "Discounted repairs (50%) at Guard docks.",
+                "60": "Access to naval intelligence.",
+                "80": "Free ship upgrades.",
+                "100": "Full naval support in conflicts."
+            }},
+            { name: "Abyssal Blades", bonuses: {
+                "-100": "Fleet relentlessly hunts the party.",
+                "-80": "Bounty issued; pirates target the party.",
+                "-60": "Frequent pirate ambushes.",
+                "-40": "Pirates demand gold or tribute.",
+                "-20": "Increased chance of pirate encounters.",
+                "0": "Neutral stance; pirates may ignore the party.",
+                "20": "Discounts on smuggled goods (20%).",
+                "40": "Safe passage in pirate-controlled areas.",
+                "60": "Black-market goods provided at no cost.",
+                "80": "Free crew recruitment.",
+                "100": "Full pirate fleet support."
+            }},
+            { name: "Azure Syndicate", bonuses: {
+                "-100": "Syndicate sabotages the party’s plans.",
+                "-80": "Trade routes blocked.",
+                "-60": "Merchants refuse to trade.",
+                "-40": "False rumors spread about the party.",
+                "-20": "Minor overcharging on goods/services.",
+                "0": "Neutral stance; standard trade behavior.",
+                "20": "Access to black-market auctions.",
+                "40": "Discounts on rare items (50%).",
+                "60": "Syndicate brokers alliances for the party.",
+                "80": "Reveals hidden relic locations.",
+                "100": "Free access to rare treasures."
+            }},
+            { name: "Gilded Corsairs", bonuses: {
+                "-100": "Full-scale Corsair fleet hunts you as a threat.",
+                "-80": "Corsair captains conspire to sink your ship.",
+                "-60": "Corsairs issue fines or bribes to naval authorities.",
+                "-40": "Corsairs sabotage your reputation.",
+                "-20": "Corsairs extort gold from you at ports.",
+                "0": "Neutral stance; they treat you with distant politeness.",
+                "20": "Discounts on luxury goods and repairs (25%).",
+                "40": "Safe passage through Corsair waters.",
+                "60": "Lavish gifts provided.",
+                "80": "Invitation to exclusive Corsair galas.",
+                "100": "Access to a treasure vault filled with rare magic items."
+            }},
+            { name: "Bloody Tide", bonuses: {
+                "-100": "Bloody Tide wages a bloody vendetta against you.",
+                "-80": "Bloody Tide sets fire to ports you visit.",
+                "-60": "Threatening warnings (bloody flags) left wherever you dock.",
+                "-40": "Bloody Tide ambushes your allies or crew.",
+                "-20": "Bloody Tide raiders target your ship for loot.",
+                "0": "Neutral stance; Bloody Tide won’t bother you unless provoked.",
+                "20": "Discounts on black-market weapons (20%).",
+                "40": "Bloody Tide ships avoid attacking you.",
+                "60": "Tribute from captured villages is shared with you.",
+                "80": "Bloody Tide allies join you in raids.",
+                "100": "Declared Butcher of the Seas."
+            }},
+            { name: "Ebon Oath", bonuses: {
+                "-100": "Sea monsters hunt you relentlessly.",
+                "-80": "The cult declares you an enemy.",
+                "-60": "Ebon Oath zealots attack in coordinated ambushes.",
+                "-40": "Dark rituals disrupt your supplies.",
+                "-20": "Cultists spread unsettling rumors.",
+                "0": "Neutral stance; the cult observes you.",
+                "20": "Zealots provide intelligence.",
+                "40": "Safe haven in Ebon sanctuaries.",
+                "60": "Access to Ebon Oath rituals.",
+                "80": "Zealots sacrifice to complete your goals.",
+                "100": "Initiated into Ebon Oath leadership."
+            }},
+            { name: "Shadowfang Fleet", bonuses: {
+                "-100": "Fleet declares you a target for elimination.",
+                "-80": "Spies infiltrate your crew.",
+                "-60": "Fleet ships ambush you.",
+                "-40": "Shadowfang captains set traps.",
+                "-20": "Fleet agents monitor your ship’s movements.",
+                "0": "Neutral stance; the fleet watches silently.",
+                "20": "Discounts on stealth-related magic items (20%).",
+                "40": "Shadowfang spies provide intelligence.",
+                "60": "Access to shadow-enhanced gear.",
+                "80": "Secret routes revealed.",
+                "100": "Fleet provides assassination or espionage services."
+            }},
+            { name: "Driftwood Marauders", bonuses: {
+                "-100": "Marauders dismantle your ship.",
+                "-80": "Marauders spread false rumors.",
+                "-60": "Driftwood ships ambush you to steal supplies.",
+                "-40": "Scavengers strip your ship of valuable parts.",
+                "-20": "Marauders sabotage your repairs.",
+                "0": "Neutral stance; they ignore you.",
+                "20": "Repairs and upgrades cost 20% less.",
+                "40": "Docking at Driftwood outposts allowed.",
+                "60": "Access to unique scavenged items.",
+                "80": "Free access to improvised magic gear.",
+                "100": "Driftwood Marauders repair your ship for free."
+            }},
+            { name: "Siren’s Grasp", bonuses: {
+                "-100": "Leaders target you with illusions.",
+                "-80": "Allies turned against you by sirens.",
+                "-60": "Navigation obscured by illusion magic.",
+                "-40": "Ambushes by enchanted ships.",
+                "-20": "Sirens attempt to manipulate you.",
+                "0": "Neutral stance; they observe silently.",
+                "20": "Discounts on illusion-related magic items.",
+                "40": "Safe passage allowed.",
+                "60": "Invitations to hidden sanctuaries.",
+                "80": "Enchanters weave protective spells.",
+                "100": "Access to their powerful enchantments."
+            }},
+            { name: "Thunderclaw Reavers", bonuses: {
+                "-100": "Full fleet hunts you.",
+                "-80": "Declare your ship an enemy.",
+                "-60": "Intercept your trade routes.",
+                "-40": "Raid your ship for supplies.",
+                "-20": "Challenge you to duels at port.",
+                "0": "Neutral stance; respect but no alliance.",
+                "20": "Discounts on weapons and supplies.",
+                "40": "Safe passage through waters.",
+                "60": "Reavers provide protection.",
+                "80": "Access to crafted weapons.",
+                "100": "Full fleet fights alongside you."
+            }},
+            { name: "Frostfang Raiders", bonuses: {
+                "-100": "Full fleet wages war on you.",
+                "-80": "Shamans destroy your sails with storm magic.",
+                "-60": "Ambushes on frozen coasts.",
+                "-40": "Raiders freeze your supplies.",
+                "-20": "Shamans summon storms to delay you.",
+                "0": "Neutral stance; they ignore you.",
+                "20": "Discounts on cold-related items.",
+                "40": "Weather protection provided.",
+                "60": "Access to enchanted ice-forged weapons.",
+                "80": "Raiders fight alongside you.",
+                "100": "Shamans teach you storm magic."
+            }},
+            { name: "City: Olivara", bonuses: {
+                "-100": "City bars the party entry.",
+                "-80": "Residents alert hostile factions.",
+                "-60": "Guides and merchants refuse service.",
+                "-40": "Merchants overcharge (50% increase).",
+                "-20": "Locals distrust the party.",
+                "0": "Neutral stance; standard services.",
+                "20": "Reduced cost for guides and maps.",
+                "40": "Discounts on jungle tools.",
+                "60": "Free jungle guides and equipment.",
+                "80": "Rangers escort the party.",
+                "100": "Free lodging and supplies."
+            }},
+            { name: "City: Azurin", bonuses: {
+                "-100": "Pirates attack on sight.",
+                "-80": "Residents refuse aid.",
+                "-60": "Local pirates sabotage the party.",
+                "-40": "Merchants overcharge.",
+                "-20": "Locals distrust the party.",
+                "0": "Neutral pirate city behavior.",
+                "20": "Minor discounts in pirate markets.",
+                "40": "Reduced prices on black-market goods.",
+                "60": "Access to safe harbors.",
+                "80": "Free ship upgrades.",
+                "100": "Pirates rally to defend the party."
+            }},
+            { name: "City: Quintara", bonuses: {
+                "-100": "City bans the party from markets.",
+                "-80": "Merchants block trade routes.",
+                "-60": "Merchants spread false rumors.",
+                "-40": "Goods cost 50% more.",
+                "-20": "Merchants are wary.",
+                "0": "Neutral stance; standard trade.",
+                "20": "Merchant guilds share trade info.",
+                "40": "Access to exclusive markets.",
+                "60": "Rare goods available.",
+                "80": "Merchants prioritize your trades.",
+                "100": "Free trade permits granted."
+            }},
+            { name: "City: Halcyona", bonuses: {
+                "-100": "Declared heretics; full ban from city.",
+                "-80": "Residents refuse to interact.",
+                "-60": "City officials block access.",
+                "-40": "Merchants and priests overcharge.",
+                "-20": "Locals are suspicious.",
+                "0": "Neutral stance.",
+                "20": "Access to festivals and blessings.",
+                "40": "Discounts on magical rituals.",
+                "60": "Free divine blessings.",
+                "80": "Priests grant rare relics.",
+                "100": "Full divine support for the party."
+            }},
+            { name: "City: Tritonus", bonuses: {
+                "-100": "City bans the party from docks.",
+                "-80": "Engineers sabotage the party's ship.",
+                "-60": "Merchants overcharge for repairs.",
+                "-40": "Ship repairs delayed.",
+                "-20": "Shipbuilders are uncooperative.",
+                "0": "Neutral stance.",
+                "20": "Minor discounts on repairs.",
+                "40": "Discounts on advanced upgrades.",
+                "60": "Access to innovative ship prototypes.",
+                "80": "Priority access to prototypes.",
+                "100": "Free advanced maritime technology."
+            }}
+        ];
+
+function resetRenown() {
+    const confirmation = prompt("Type DELETE to confirm renown reset:");
+    if (confirmation === "DELETE") {
+        // Reset the savedData array
+        savedData.forEach(faction => {
+            faction.baseRenown = 0;
+            faction.partyActions = 0;
+            faction.crossFactionModifiers = 0;
+            faction.totalRenown = 0;
+        });
+        saveToLocalStorage();
+        renderTable();
+        alert("Renown has been reset.");
+    } else {
+        alert("Renown reset canceled.");
+    }
+}
+
+
+const savedData = JSON.parse(localStorage.getItem("renownData")) || factions.map(faction => ({
+    name: faction.name,
+    baseRenown: 0,
+    partyActions: 0,
+    crossFactionModifiers: 0,
+    totalRenown: 0
+}));
+
+
+console.log("Saved Data:", savedData);
+
+function calculateRenown() {
+    savedData.forEach(faction => {
+        faction.totalRenown = faction.baseRenown + faction.partyActions + faction.crossFactionModifiers;
+    });
+    console.log("Updated Data with Calculations:", savedData);
+    saveToLocalStorage();
+    renderTable();
+}
+
+
+        function saveToLocalStorage() {
+            localStorage.setItem("renownData", JSON.stringify(savedData));
+        }
+
+        function renderTable() {
+            const tableBody = document.getElementById("renownTable");
+            tableBody.innerHTML = "";
+            savedData.forEach(faction => {
+                const renownClass =
+                    faction.totalRenown >= 50 ? "positive" :
+                    faction.totalRenown >= 0 ? "neutral" : "negative";
+                const bonuses = factions.find(f => f.name === faction.name)?.bonuses || {};
+                const row = `
+                    <tr>
+                        <td onmouseover="showTooltip('${faction.name}', ${faction.totalRenown})" onmouseout="hideTooltip()">${faction.name}</td>
+                        <td><input type="number" value="${faction.baseRenown}" onchange="updateBaseRenown('${faction.name}', this.value)"></td>
+                        <td><input type="number" value="${faction.partyActions}" onchange="updatePartyActions('${faction.name}', this.value)"></td>
+                        <td>${faction.crossFactionModifiers.toFixed(2)}</td>
+                        <td>${faction.totalRenown.toFixed(2)}</td>
+                        <td>
+                            <div class="renown-bar">
+                                <div class="renown-level ${renownClass}" style="width: ${Math.min(Math.max((faction.totalRenown + 100) / 2, 0), 100)}%;">
+                                    ${Math.round(faction.totalRenown)}
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                tableBody.innerHTML += row;
+            });
+        }
+
+        function showTooltip(name, totalRenown) {
+            const tooltip = document.getElementById("tooltip");
+            const faction = factions.find(f => f.name === name);
+            const bonuses = faction?.bonuses || {};
+            const closestLevel = Object.keys(bonuses).reduce((prev, curr) => Math.abs(curr - totalRenown) < Math.abs(prev - totalRenown) ? curr : prev);
+            tooltip.innerHTML = `<strong>${name} Bonuses:</strong><br>${bonuses[closestLevel] || "No specific bonus at this level."}`;
+            tooltip.style.display = "block";
+            document.addEventListener("mousemove", positionTooltip);
+        }
+
+        function hideTooltip() {
+            const tooltip = document.getElementById("tooltip");
+            tooltip.style.display = "none";
+            document.removeEventListener("mousemove", positionTooltip);
+        }
+
+        function positionTooltip(event) {
+            const tooltip = document.getElementById("tooltip");
+            tooltip.style.left = event.pageX + 15 + "px";
+            tooltip.style.top = event.pageY + 15 + "px";
+        }
+
+function updateBaseRenown(name, value) {
+    const faction = savedData.find(f => f.name === name);
+    const oldRenown = faction.baseRenown;
+    faction.baseRenown = parseInt(value) || 0;
+    const delta = faction.baseRenown - oldRenown;
+
+    adjustRelatedRenown(name, delta);
+    calculateRenown();
+}
+
+function updatePartyActions(name, value) {
+    const faction = savedData.find(f => f.name === name);
+    const oldRenown = faction.partyActions;
+    faction.partyActions = parseInt(value) || 0;
+    const delta = faction.partyActions - oldRenown;
+
+    adjustRelatedRenown(name, delta);
+    calculateRenown();
+}
+
+function adjustRelatedRenown(name, delta) {
+    const relationships = relationshipTable[name];
+    if (!relationships) return;
+
+    relationships.enemies?.forEach(enemyName => {
+        const enemy = savedData.find(f => f.name === enemyName);
+        if (enemy) {
+            enemy.crossFactionModifiers -= delta * 0.5; // Enemies lose half the delta
+        }
+    });
+
+    relationships.friends?.forEach(friendName => {
+        const friend = savedData.find(f => f.name === friendName);
+        if (friend) {
+            friend.crossFactionModifiers += delta * 0.3; // Friends gain 30% of the delta
+        }
+    });
+}
+
+function exportData() {
+    const dataStr = JSON.stringify(savedData, null, 2); // Convert data to JSON string
+    const blob = new Blob([dataStr], { type: "application/json" }); // Create a Blob object
+    const url = URL.createObjectURL(blob); // Generate a URL for the Blob
+
+    // Create a temporary link to trigger the download
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "renown_data.json";
+    a.click();
+    URL.revokeObjectURL(url); // Clean up the URL
+}
+
+function importData() {
+    document.getElementById("importFile").click(); // Trigger the file input dialog
+}
+
+function handleImport(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function (e) {
+        try {
+            const importedData = JSON.parse(e.target.result); // Parse the JSON file
+            validateAndLoadData(importedData); // Validate and load data
+        } catch (error) {
+            alert("Failed to import data: Invalid JSON file.");
+        }
+    };
+    reader.readAsText(file); // Read the file as text
+}
+
+function validateAndLoadData(data) {
+    if (Array.isArray(data) && data.every(item => item.name && "baseRenown" in item && "totalRenown" in item)) {
+        savedData.splice(0, savedData.length, ...data); // Replace current data
+        saveToLocalStorage(); // Save imported data to localStorage
+        renderTable(); // Update the table
+        alert("Renown data successfully imported!");
+    } else {
+        alert("Failed to import data: Invalid data structure.");
+    }
+}
+
+
+
+        calculateRenown();
+
+    </script>
+</body>
+</html>
+
+
