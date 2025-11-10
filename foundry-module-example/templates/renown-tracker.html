@@ -1,0 +1,60 @@
+<form class="renown-tracker">
+  <div class="window-header">
+    <h1>{{worldName}} - Renown Tracker</h1>
+  </div>
+  
+  <div class="window-content">
+    <p class="description">Hover over a faction or city to see detailed bonuses/penalties. Changes are saved automatically.</p>
+    
+    <table class="renown-table">
+      <thead>
+        <tr>
+          <th>Faction/City</th>
+          <th>Base Renown</th>
+          <th>Party Actions</th>
+          <th>Cross-Faction Modifiers</th>
+          <th>Total Renown</th>
+          <th>Renown Level</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{#each savedData}}
+        <tr>
+          <td class="faction-name" data-faction="{{@key}}">{{@key}}</td>
+          <td>
+            <input type="number" 
+                   class="update-base-renown" 
+                   data-faction="{{@key}}"
+                   value="{{this.baseRenown}}">
+          </td>
+          <td>
+            <input type="number" 
+                   class="update-party-actions" 
+                   data-faction="{{@key}}"
+                   value="{{this.partyActions}}">
+          </td>
+          <td>{{this.crossFactionModifiers}}</td>
+          <td>{{this.totalRenown}}</td>
+          <td>
+            <div class="renown-bar">
+              <div class="renown-level {{#if (gte this.totalRenown 50)}}positive{{else if (gte this.totalRenown 0)}}neutral{{else}}negative{{/if}}" 
+                   style="width: {{calculateWidth this.totalRenown}}%">
+                {{this.totalRenown}}
+              </div>
+            </div>
+          </td>
+        </tr>
+        {{/each}}
+      </tbody>
+    </table>
+    
+    <div class="button-group">
+      <button type="button" class="reset-renown">Reset Renown</button>
+      <button type="button" class="export-renown">Export Renown Data</button>
+      <button type="button" class="import-renown">Import Renown Data</button>
+      <button type="button" class="export-world">Export Full World</button>
+      <button type="button" class="import-world">Import Full World</button>
+    </div>
+  </div>
+</form>
+

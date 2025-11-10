@@ -202,14 +202,37 @@
             border-radius: 15px;
             font-size: 0.9em;
         }
-        .descriptor-tag input[type="checkbox"] {
-            margin: 0;
+        .descriptor-tag .remove-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
             cursor: pointer;
+            font-size: 12px;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
-        .descriptor-tag label {
-            margin: 0;
-            cursor: pointer;
-            font-weight: normal;
+        .descriptor-tag .remove-btn:hover {
+            background: #c82333;
+        }
+        .descriptor-selector {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .descriptor-selector select {
+            flex: 1;
+        }
+        .selected-descriptors {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
         }
         .suggestions-panel {
             background: rgba(40, 167, 69, 0.1);
@@ -808,8 +831,13 @@
                     </div>
                     <div class="form-group">
                         <label>Faction/City Type & Descriptors:</label>
-                        <div class="descriptor-tags" id="descriptors-${index}"></div>
-                        <button onclick="generateSuggestions(${index})">✨ Generate Bonus Suggestions</button>
+                        <div class="descriptor-selector">
+                            <select id="descriptor-select-${index}" onchange="addDescriptor(${index}, this.value)">
+                                <option value="">-- Select a descriptor to add --</option>
+                            </select>
+                            <button onclick="generateSuggestions(${index})">✨ Generate Bonus Suggestions</button>
+                        </div>
+                        <div class="selected-descriptors" id="selected-descriptors-${index}"></div>
                     </div>
                     <div class="form-group">
                         <label>Bonuses/Penalties:</label>
@@ -845,35 +873,59 @@
         ];
 
         function renderDescriptors(index, faction) {
-            const container = document.getElementById(`descriptors-${index}`);
             if (!faction.descriptors) {
                 faction.descriptors = [];
             }
             
+            // Populate dropdown with available descriptors (excluding already selected ones)
+            const select = document.getElementById(`descriptor-select-${index}`);
+            select.innerHTML = '<option value="">-- Select a descriptor to add --</option>';
             availableDescriptors.forEach(desc => {
+                if (!faction.descriptors.includes(desc)) {
+                    const option = document.createElement("option");
+                    option.value = desc;
+                    option.textContent = desc;
+                    select.appendChild(option);
+                }
+            });
+            
+            // Render selected descriptors with remove buttons
+            const container = document.getElementById(`selected-descriptors-${index}`);
+            container.innerHTML = "";
+            faction.descriptors.forEach(desc => {
                 const tag = document.createElement("div");
                 tag.className = "descriptor-tag";
-                const checked = faction.descriptors.includes(desc) ? "checked" : "";
                 tag.innerHTML = `
-                    <input type="checkbox" id="desc-${index}-${desc}" ${checked} 
-                           onchange="updateDescriptor(${index}, '${desc}', this.checked)">
-                    <label for="desc-${index}-${desc}">${desc}</label>
+                    <span>${desc}</span>
+                    <button class="remove-btn" onclick="removeDescriptor(${index}, '${desc}')" title="Remove ${desc}">×</button>
                 `;
                 container.appendChild(tag);
             });
         }
 
-        function updateDescriptor(index, descriptor, checked) {
+        function addDescriptor(index, descriptor) {
+            if (!descriptor || descriptor === "") return;
+            
             if (!worldData.factions[index].descriptors) {
                 worldData.factions[index].descriptors = [];
             }
-            if (checked) {
-                if (!worldData.factions[index].descriptors.includes(descriptor)) {
-                    worldData.factions[index].descriptors.push(descriptor);
-                }
-            } else {
-                worldData.factions[index].descriptors = worldData.factions[index].descriptors.filter(d => d !== descriptor);
+            
+            if (!worldData.factions[index].descriptors.includes(descriptor)) {
+                worldData.factions[index].descriptors.push(descriptor);
+                renderDescriptors(index, worldData.factions[index]);
             }
+            
+            // Reset dropdown
+            document.getElementById(`descriptor-select-${index}`).value = "";
+        }
+
+        function removeDescriptor(index, descriptor) {
+            if (!worldData.factions[index].descriptors) {
+                worldData.factions[index].descriptors = [];
+            }
+            
+            worldData.factions[index].descriptors = worldData.factions[index].descriptors.filter(d => d !== descriptor);
+            renderDescriptors(index, worldData.factions[index]);
         }
 
         function addFaction() {
@@ -1222,6 +1274,278 @@
                     { level: 60, text: "Free guides and equipment." },
                     { level: 80, text: "Local escorts provided." },
                     { level: 100, text: "Free lodging and supplies." }
+                ]
+            },
+            "Noble": {
+                negative: [
+                    { level: -100, text: "Nobles declare you persona non grata." },
+                    { level: -80, text: "Noble houses blacklist you from high society." },
+                    { level: -60, text: "Nobles refuse to grant audiences." },
+                    { level: -40, text: "Nobles spread rumors to damage your reputation." },
+                    { level: -20, text: "Nobles treat you with cold disdain." }
+                ],
+                positive: [
+                    { level: 20, text: "Minor noble favors granted." },
+                    { level: 40, text: "Access to noble events and galas." },
+                    { level: 60, text: "Nobles provide political support." },
+                    { level: 80, text: "Noble houses offer alliances." },
+                    { level: 100, text: "Granted noble title and full privileges." }
+                ]
+            },
+            "Cult": {
+                negative: [
+                    { level: -100, text: "Cult declares you a heretic and enemy." },
+                    { level: -80, text: "Cultists hunt you relentlessly." },
+                    { level: -60, text: "Cultists perform dark rituals against you." },
+                    { level: -40, text: "Cult spreads fear and suspicion about you." },
+                    { level: -20, text: "Cultists watch you with suspicion." }
+                ],
+                positive: [
+                    { level: 20, text: "Cultists provide minor information." },
+                    { level: 40, text: "Access to cult sanctuaries." },
+                    { level: 60, text: "Cultists perform rituals to aid you." },
+                    { level: 80, text: "Initiated into cult secrets." },
+                    { level: 100, text: "Elevated to cult leadership." }
+                ]
+            },
+            "Trading": {
+                negative: [
+                    { level: -100, text: "Trading guilds ban you from all markets." },
+                    { level: -80, text: "Merchants refuse all business with you." },
+                    { level: -60, text: "Trade routes closed to you." },
+                    { level: -40, text: "Merchants charge exorbitant prices." },
+                    { level: -20, text: "Merchants are reluctant to deal." }
+                ],
+                positive: [
+                    { level: 20, text: "Access to exclusive trading posts." },
+                    { level: 40, text: "Discounts on trade goods (30%)." },
+                    { level: 60, text: "Trading guilds share market intelligence." },
+                    { level: 80, text: "Priority access to rare commodities." },
+                    { level: 100, text: "Honorary membership in trading guilds." }
+                ]
+            },
+            "Warrior": {
+                negative: [
+                    { level: -100, text: "Warriors declare you a sworn enemy." },
+                    { level: -80, text: "Warrior bands hunt you for sport." },
+                    { level: -60, text: "Warriors challenge you to deadly duels." },
+                    { level: -40, text: "Warriors spread tales of your cowardice." },
+                    { level: -20, text: "Warriors mock and belittle you." }
+                ],
+                positive: [
+                    { level: 20, text: "Warriors respect your combat prowess." },
+                    { level: 40, text: "Access to warrior training grounds." },
+                    { level: 60, text: "Warriors offer to fight alongside you." },
+                    { level: 80, text: "Access to legendary weapons and armor." },
+                    { level: 100, text: "Declared champion and granted warrior title." }
+                ]
+            },
+            "Scholar": {
+                negative: [
+                    { level: -100, text: "Scholars declare your research heretical." },
+                    { level: -80, text: "Libraries and academies ban you." },
+                    { level: -60, text: "Scholars refuse to share knowledge." },
+                    { level: -40, text: "Scholars spread false information about you." },
+                    { level: -20, text: "Scholars are dismissive of your questions." }
+                ],
+                positive: [
+                    { level: 20, text: "Scholars share basic information." },
+                    { level: 40, text: "Access to restricted libraries." },
+                    { level: 60, text: "Scholars provide rare knowledge." },
+                    { level: 80, text: "Invited to exclusive academic circles." },
+                    { level: 100, text: "Granted access to ancient and forbidden texts." }
+                ]
+            },
+            "Assassin": {
+                negative: [
+                    { level: -100, text: "Assassins place a contract on your life." },
+                    { level: -80, text: "Assassins actively hunt you." },
+                    { level: -60, text: "Assassins attempt to poison you." },
+                    { level: -40, text: "Assassins sabotage your plans." },
+                    { level: -20, text: "Assassins watch you from the shadows." }
+                ],
+                positive: [
+                    { level: 20, text: "Assassins ignore you." },
+                    { level: 40, text: "Assassins share basic intelligence." },
+                    { level: 60, text: "Access to assassination services." },
+                    { level: 80, text: "Assassins provide protection." },
+                    { level: 100, text: "Honorary member of the assassins' guild." }
+                ]
+            },
+            "Thief": {
+                negative: [
+                    { level: -100, text: "Thieves' guild marks you for death." },
+                    { level: -80, text: "Thieves constantly rob you." },
+                    { level: -60, text: "Thieves sabotage your equipment." },
+                    { level: -40, text: "Thieves spread rumors about your wealth." },
+                    { level: -20, text: "Thieves target you for pickpocketing." }
+                ],
+                positive: [
+                    { level: 20, text: "Thieves leave you alone." },
+                    { level: 40, text: "Thieves share information about targets." },
+                    { level: 60, text: "Access to stolen goods markets." },
+                    { level: 80, text: "Thieves provide lockpicking services." },
+                    { level: 100, text: "Honorary member of the thieves' guild." }
+                ]
+            },
+            "Mercenary": {
+                negative: [
+                    { level: -100, text: "Mercenaries are hired to eliminate you." },
+                    { level: -80, text: "Mercenary companies hunt you." },
+                    { level: -60, text: "Mercenaries refuse to work with you." },
+                    { level: -40, text: "Mercenaries charge exorbitant rates." },
+                    { level: -20, text: "Mercenaries are untrustworthy around you." }
+                ],
+                positive: [
+                    { level: 20, text: "Mercenaries offer standard rates." },
+                    { level: 40, text: "Discounts on mercenary services (25%)." },
+                    { level: 60, text: "Mercenaries provide reliable protection." },
+                    { level: 80, text: "Access to elite mercenary companies." },
+                    { level: 100, text: "Mercenaries fight for you at no cost." }
+                ]
+            },
+            "Explorer": {
+                negative: [
+                    { level: -100, text: "Explorers sabotage your expeditions." },
+                    { level: -80, text: "Explorers refuse to share maps." },
+                    { level: -60, text: "Explorers spread false information." },
+                    { level: -40, text: "Explorers charge high prices for guides." },
+                    { level: -20, text: "Explorers are reluctant to help." }
+                ],
+                positive: [
+                    { level: 20, text: "Explorers share basic maps." },
+                    { level: 40, text: "Access to detailed exploration reports." },
+                    { level: 60, text: "Explorers guide you to hidden locations." },
+                    { level: 80, text: "Access to secret routes and shortcuts." },
+                    { level: 100, text: "Explorers share all discovered treasures." }
+                ]
+            },
+            "Diplomat": {
+                negative: [
+                    { level: -100, text: "Diplomats work against you in all negotiations." },
+                    { level: -80, text: "Diplomatic channels closed to you." },
+                    { level: -60, text: "Diplomats spread negative propaganda." },
+                    { level: -40, text: "Diplomats refuse to meet with you." },
+                    { level: -20, text: "Diplomats are cold and unhelpful." }
+                ],
+                positive: [
+                    { level: 20, text: "Diplomats provide basic introductions." },
+                    { level: 40, text: "Access to diplomatic circles." },
+                    { level: 60, text: "Diplomats broker important alliances." },
+                    { level: 80, text: "Diplomatic immunity granted." },
+                    { level: 100, text: "Honored as a master diplomat." }
+                ]
+            },
+            "Artisan": {
+                negative: [
+                    { level: -100, text: "Artisans refuse to work for you." },
+                    { level: -80, text: "Guilds blacklist you from services." },
+                    { level: -60, text: "Artisans sabotage your orders." },
+                    { level: -40, text: "Artisans charge triple prices." },
+                    { level: -20, text: "Artisans are slow and uncooperative." }
+                ],
+                positive: [
+                    { level: 20, text: "Artisans provide standard services." },
+                    { level: 40, text: "Discounts on crafted items (30%)." },
+                    { level: 60, text: "Access to master craftsmen." },
+                    { level: 80, text: "Artisans create custom masterpieces." },
+                    { level: 100, text: "Honorary guild member with free services." }
+                ]
+            },
+            "Mystical": {
+                negative: [
+                    { level: -100, text: "Mystical forces curse you." },
+                    { level: -80, text: "Mystical barriers block your path." },
+                    { level: -60, text: "Mystical entities harass you." },
+                    { level: -40, text: "Mystical visions mislead you." },
+                    { level: -20, text: "Mystical energies feel hostile." }
+                ],
+                positive: [
+                    { level: 20, text: "Mystical forces are neutral." },
+                    { level: 40, text: "Mystical visions guide you." },
+                    { level: 60, text: "Access to mystical sanctuaries." },
+                    { level: 80, text: "Mystical entities aid you." },
+                    { level: 100, text: "Blessed by mystical powers." }
+                ]
+            },
+            "Ancient": {
+                negative: [
+                    { level: -100, text: "Ancient guardians hunt you." },
+                    { level: -80, text: "Ancient ruins are sealed from you." },
+                    { level: -60, text: "Ancient curses affect you." },
+                    { level: -40, text: "Ancient knowledge is hidden from you." },
+                    { level: -20, text: "Ancient sites feel unwelcoming." }
+                ],
+                positive: [
+                    { level: 20, text: "Ancient sites allow basic access." },
+                    { level: 40, text: "Ancient guardians provide guidance." },
+                    { level: 60, text: "Access to ancient libraries." },
+                    { level: 80, text: "Ancient secrets revealed to you." },
+                    { level: 100, text: "Honored as keeper of ancient wisdom." }
+                ]
+            },
+            "Corrupt": {
+                negative: [
+                    { level: -100, text: "Corrupt officials frame you for crimes." },
+                    { level: -80, text: "Corrupt networks target you." },
+                    { level: -60, text: "Corrupt officials demand bribes." },
+                    { level: -40, text: "Corrupt systems work against you." },
+                    { level: -20, text: "Corrupt officials are unhelpful." }
+                ],
+                positive: [
+                    { level: 20, text: "Corrupt officials ignore you." },
+                    { level: 40, text: "Corrupt networks provide information." },
+                    { level: 60, text: "Access to corrupt networks." },
+                    { level: 80, text: "Corrupt officials grant favors." },
+                    { level: 100, text: "Integrated into corrupt power structure." }
+                ]
+            },
+            "Lawful": {
+                negative: [
+                    { level: -100, text: "Lawful authorities declare you an outlaw." },
+                    { level: -80, text: "Lawful forces hunt you." },
+                    { level: -60, text: "Lawful officials deny you services." },
+                    { level: -40, text: "Lawful authorities are suspicious." },
+                    { level: -20, text: "Lawful officials are uncooperative." }
+                ],
+                positive: [
+                    { level: 20, text: "Lawful authorities treat you fairly." },
+                    { level: 40, text: "Access to lawful services and protection." },
+                    { level: 60, text: "Lawful authorities provide support." },
+                    { level: 80, text: "Granted legal privileges and immunities." },
+                    { level: 100, text: "Honored as a champion of law and order." }
+                ]
+            },
+            "Chaotic": {
+                negative: [
+                    { level: -100, text: "Chaotic forces actively work against you." },
+                    { level: -80, text: "Chaotic agents sabotage your plans." },
+                    { level: -60, text: "Chaotic forces create obstacles." },
+                    { level: -40, text: "Chaotic agents spread disorder around you." },
+                    { level: -20, text: "Chaotic forces are unpredictable." }
+                ],
+                positive: [
+                    { level: 20, text: "Chaotic forces leave you alone." },
+                    { level: 40, text: "Chaotic agents provide information." },
+                    { level: 60, text: "Access to chaotic networks." },
+                    { level: 80, text: "Chaotic forces aid your plans." },
+                    { level: 100, text: "Embraced as an agent of chaos." }
+                ]
+            },
+            "Neutral": {
+                negative: [
+                    { level: -100, text: "Neutral parties actively avoid you." },
+                    { level: -80, text: "Neutral forces refuse to interact." },
+                    { level: -60, text: "Neutral parties are unhelpful." },
+                    { level: -40, text: "Neutral forces are indifferent." },
+                    { level: -20, text: "Neutral parties are distant." }
+                ],
+                positive: [
+                    { level: 20, text: "Neutral parties are friendly." },
+                    { level: 40, text: "Neutral forces provide basic aid." },
+                    { level: 60, text: "Neutral parties offer balanced support." },
+                    { level: 80, text: "Neutral forces grant favors." },
+                    { level: 100, text: "Respected as a balanced mediator." }
                 ]
             }
         };

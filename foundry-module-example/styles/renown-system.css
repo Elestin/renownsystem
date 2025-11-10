@@ -1,0 +1,182 @@
+/**
+ * Renown System Styles for Foundry VTT
+ * Adapts your existing styles to work within Foundry's UI
+ */
+
+.renown-tracker {
+  padding: 10px;
+}
+
+.renown-tracker .window-header h1 {
+  text-align: center;
+  color: var(--color-text-heading);
+}
+
+.renown-tracker .description {
+  text-align: center;
+  margin-bottom: 15px;
+  color: var(--color-text-secondary);
+}
+
+.renown-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 15px 0;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border-light);
+}
+
+.renown-table th {
+  background: var(--color-bg-dark);
+  color: var(--color-text-heading);
+  padding: 8px;
+  text-align: center;
+  border: 1px solid var(--color-border-light);
+}
+
+.renown-table td {
+  padding: 8px;
+  text-align: center;
+  border: 1px solid var(--color-border-light);
+}
+
+.renown-table input[type="number"] {
+  width: 80px;
+  text-align: center;
+  padding: 4px;
+  border: 1px solid var(--color-border-light);
+  border-radius: 3px;
+  background: var(--color-bg-input);
+}
+
+.renown-bar {
+  height: 20px;
+  width: 100%;
+  background-color: var(--color-bg-dark);
+  border-radius: 3px;
+  overflow: hidden;
+  position: relative;
+}
+
+.renown-level {
+  height: 100%;
+  text-align: right;
+  color: white;
+  padding-right: 5px;
+  box-sizing: border-box;
+  font-weight: bold;
+  font-size: 12px;
+  line-height: 20px;
+}
+
+.renown-level.positive {
+  background: linear-gradient(to right, #2e8b57, #66cdaa);
+}
+
+.renown-level.neutral {
+  background: linear-gradient(to right, #4682b4, #87cefa);
+}
+
+.renown-level.negative {
+  background: linear-gradient(to right, #b22222, #dc143c);
+}
+
+.button-group {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 20px;
+  flex-wrap: wrap;
+}
+
+.button-group button {
+  padding: 8px 16px;
+  border: 1px solid var(--color-border-light);
+  border-radius: 3px;
+  background: var(--color-bg-button);
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.button-group button:hover {
+  background: var(--color-bg-button-hover);
+}
+
+/* Admin Config Styles */
+.renown-admin-config {
+  padding: 10px;
+}
+
+.renown-admin-config .form-group {
+  margin-bottom: 15px;
+}
+
+.renown-admin-config label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+
+.renown-admin-config input[type="text"],
+.renown-admin-config input[type="number"],
+.renown-admin-config select,
+.renown-admin-config textarea {
+  width: 100%;
+  padding: 6px;
+  border: 1px solid var(--color-border-light);
+  border-radius: 3px;
+  background: var(--color-bg-input);
+  color: var(--color-text);
+}
+
+.renown-admin-config input[type="color"] {
+  width: 60px;
+  height: 40px;
+  border: 1px solid var(--color-border-light);
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+/* Descriptor tags */
+.descriptor-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 5px;
+}
+
+.descriptor-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  background: rgba(74, 158, 255, 0.2);
+  border: 1px solid #4a9eff;
+  border-radius: 15px;
+  font-size: 0.9em;
+}
+
+/* Suggestions modal */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 2000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+}
+
+.modal-content {
+  background: var(--color-bg);
+  margin: 5% auto;
+  padding: 20px;
+  border: 2px solid var(--color-border-light);
+  border-radius: 10px;
+  width: 80%;
+  max-width: 800px;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
