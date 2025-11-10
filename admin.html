@@ -186,6 +186,93 @@
             background: rgba(220, 53, 69, 0.3);
             border: 1px solid #dc3545;
         }
+        .descriptor-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 5px;
+        }
+        .descriptor-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 10px;
+            background: rgba(74, 158, 255, 0.2);
+            border: 1px solid #4a9eff;
+            border-radius: 15px;
+            font-size: 0.9em;
+        }
+        .descriptor-tag input[type="checkbox"] {
+            margin: 0;
+            cursor: pointer;
+        }
+        .descriptor-tag label {
+            margin: 0;
+            cursor: pointer;
+            font-weight: normal;
+        }
+        .suggestions-panel {
+            background: rgba(40, 167, 69, 0.1);
+            border: 1px solid #28a745;
+            border-radius: 5px;
+            padding: 15px;
+            margin-top: 10px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .suggestion-item {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid #28a745;
+            border-radius: 5px;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+        .suggestion-item h4 {
+            margin: 0 0 5px 0;
+            color: #28a745;
+        }
+        .suggestion-item p {
+            margin: 5px 0;
+            color: #e0e0e0;
+        }
+        .suggestion-item button {
+            background: #28a745;
+            margin-top: 5px;
+        }
+        .suggestion-item button:hover {
+            background: #218838;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+        }
+        .modal-content {
+            background: #1a1a2e;
+            margin: 5% auto;
+            padding: 20px;
+            border: 2px solid #4a9eff;
+            border-radius: 10px;
+            width: 80%;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .close-modal {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .close-modal:hover {
+            color: #fff;
+        }
     </style>
 </head>
 <body>
@@ -299,6 +386,15 @@
             <button onclick="importWorld()">Import World from JSON</button>
             <input type="file" id="importFile" style="display: none;" accept=".json" onchange="handleWorldImport(event)">
             <button class="danger" onclick="loadDefaultWorld()">Load Default World</button>
+        </div>
+    </div>
+
+    <!-- Suggestions Modal -->
+    <div id="suggestionsModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeSuggestionsModal()">&times;</span>
+            <h2 id="modalTitle">Bonus Suggestions</h2>
+            <div id="suggestionsContent"></div>
         </div>
     </div>
 
@@ -711,12 +807,20 @@
                         <input type="text" value="${faction.name}" onchange="updateFactionName(${index}, this.value)">
                     </div>
                     <div class="form-group">
+                        <label>Faction/City Type & Descriptors:</label>
+                        <div class="descriptor-tags" id="descriptors-${index}"></div>
+                        <button onclick="generateSuggestions(${index})">✨ Generate Bonus Suggestions</button>
+                    </div>
+                    <div class="form-group">
                         <label>Bonuses/Penalties:</label>
                         <div id="bonuses-${index}"></div>
                         <button onclick="addBonus(${index})">+ Add Bonus/Penalty</button>
                     </div>
                 `;
                 container.appendChild(div);
+                
+                // Render descriptors
+                renderDescriptors(index, faction);
                 
                 // Render bonuses
                 const bonusesContainer = document.getElementById(`bonuses-${index}`);
@@ -733,10 +837,50 @@
             });
         }
 
+        const availableDescriptors = [
+            "Pirate", "Naval", "Merchant", "Religious", "Criminal", "Military", 
+            "Magical", "Noble", "Cult", "City", "Trading", "Warrior", "Scholar",
+            "Assassin", "Thief", "Mercenary", "Explorer", "Diplomat", "Artisan",
+            "Mystical", "Ancient", "Corrupt", "Lawful", "Chaotic", "Neutral"
+        ];
+
+        function renderDescriptors(index, faction) {
+            const container = document.getElementById(`descriptors-${index}`);
+            if (!faction.descriptors) {
+                faction.descriptors = [];
+            }
+            
+            availableDescriptors.forEach(desc => {
+                const tag = document.createElement("div");
+                tag.className = "descriptor-tag";
+                const checked = faction.descriptors.includes(desc) ? "checked" : "";
+                tag.innerHTML = `
+                    <input type="checkbox" id="desc-${index}-${desc}" ${checked} 
+                           onchange="updateDescriptor(${index}, '${desc}', this.checked)">
+                    <label for="desc-${index}-${desc}">${desc}</label>
+                `;
+                container.appendChild(tag);
+            });
+        }
+
+        function updateDescriptor(index, descriptor, checked) {
+            if (!worldData.factions[index].descriptors) {
+                worldData.factions[index].descriptors = [];
+            }
+            if (checked) {
+                if (!worldData.factions[index].descriptors.includes(descriptor)) {
+                    worldData.factions[index].descriptors.push(descriptor);
+                }
+            } else {
+                worldData.factions[index].descriptors = worldData.factions[index].descriptors.filter(d => d !== descriptor);
+            }
+        }
+
         function addFaction() {
             worldData.factions.push({
                 name: "New Faction",
-                bonuses: { "0": "Neutral stance." }
+                bonuses: { "0": "Neutral stance." },
+                descriptors: []
             });
             if (!worldData.relationships["New Faction"]) {
                 worldData.relationships["New Faction"] = { friends: [], enemies: [] };
@@ -948,6 +1092,310 @@
                 msgDiv.textContent = "";
                 msgDiv.className = "";
             }, 3000);
+        }
+
+        // Suggestion generation
+        const suggestionTemplates = {
+            "Pirate": {
+                negative: [
+                    { level: -100, text: "Pirate fleet relentlessly hunts the party." },
+                    { level: -80, text: "Bounty issued; pirates target the party." },
+                    { level: -60, text: "Frequent pirate ambushes." },
+                    { level: -40, text: "Pirates demand gold or tribute." },
+                    { level: -20, text: "Increased chance of pirate encounters." }
+                ],
+                positive: [
+                    { level: 20, text: "Discounts on smuggled goods (20%)." },
+                    { level: 40, text: "Safe passage in pirate-controlled areas." },
+                    { level: 60, text: "Black-market goods provided at no cost." },
+                    { level: 80, text: "Free crew recruitment." },
+                    { level: 100, text: "Full pirate fleet support." }
+                ]
+            },
+            "Naval": {
+                negative: [
+                    { level: -100, text: "Full bounty issued; attacked on sight." },
+                    { level: -80, text: "Naval forces pursue the party aggressively." },
+                    { level: -60, text: "Docking privileges denied." },
+                    { level: -40, text: "Frequent inspections delay travel." },
+                    { level: -20, text: "Naval forces are suspicious and unfriendly." }
+                ],
+                positive: [
+                    { level: 20, text: "Minor supplies provided for free." },
+                    { level: 40, text: "Discounted repairs (50%) at naval docks." },
+                    { level: 60, text: "Access to naval intelligence." },
+                    { level: 80, text: "Free ship upgrades." },
+                    { level: 100, text: "Full naval support in conflicts." }
+                ]
+            },
+            "Merchant": {
+                negative: [
+                    { level: -100, text: "Merchants sabotage the party's plans." },
+                    { level: -80, text: "Trade routes blocked." },
+                    { level: -60, text: "Merchants refuse to trade." },
+                    { level: -40, text: "False rumors spread about the party." },
+                    { level: -20, text: "Minor overcharging on goods/services." }
+                ],
+                positive: [
+                    { level: 20, text: "Access to exclusive auctions." },
+                    { level: 40, text: "Discounts on rare items (50%)." },
+                    { level: 60, text: "Merchants broker alliances for the party." },
+                    { level: 80, text: "Reveals hidden relic locations." },
+                    { level: 100, text: "Free access to rare treasures." }
+                ]
+            },
+            "Religious": {
+                negative: [
+                    { level: -100, text: "Declared heretics; full ban from area." },
+                    { level: -80, text: "Religious authorities refuse to interact." },
+                    { level: -60, text: "Temples block access." },
+                    { level: -40, text: "Priests and merchants overcharge." },
+                    { level: -20, text: "Locals are suspicious." }
+                ],
+                positive: [
+                    { level: 20, text: "Access to festivals and blessings." },
+                    { level: 40, text: "Discounts on magical rituals." },
+                    { level: 60, text: "Free divine blessings." },
+                    { level: 80, text: "Priests grant rare relics." },
+                    { level: 100, text: "Full divine support for the party." }
+                ]
+            },
+            "Criminal": {
+                negative: [
+                    { level: -100, text: "Criminal organization targets you for elimination." },
+                    { level: -80, text: "Spies infiltrate your crew." },
+                    { level: -60, text: "Criminal ambushes." },
+                    { level: -40, text: "Criminals set traps." },
+                    { level: -20, text: "Criminal agents monitor your movements." }
+                ],
+                positive: [
+                    { level: 20, text: "Discounts on illegal goods (20%)." },
+                    { level: 40, text: "Criminal contacts provide intelligence." },
+                    { level: 60, text: "Access to criminal networks." },
+                    { level: 80, text: "Secret routes revealed." },
+                    { level: 100, text: "Criminal organization provides services." }
+                ]
+            },
+            "Military": {
+                negative: [
+                    { level: -100, text: "Military declares you an enemy." },
+                    { level: -80, text: "Military forces hunt you." },
+                    { level: -60, text: "Military blocks your access." },
+                    { level: -40, text: "Military inspections delay you." },
+                    { level: -20, text: "Military is wary of you." }
+                ],
+                positive: [
+                    { level: 20, text: "Minor military supplies provided." },
+                    { level: 40, text: "Discounted military equipment." },
+                    { level: 60, text: "Access to military intelligence." },
+                    { level: 80, text: "Military provides protection." },
+                    { level: 100, text: "Full military support in conflicts." }
+                ]
+            },
+            "Magical": {
+                negative: [
+                    { level: -100, text: "Mages target you with powerful spells." },
+                    { level: -80, text: "Allies turned against you by magic." },
+                    { level: -60, text: "Navigation obscured by illusion magic." },
+                    { level: -40, text: "Ambushes by enchanted forces." },
+                    { level: -20, text: "Mages attempt to manipulate you." }
+                ],
+                positive: [
+                    { level: 20, text: "Discounts on magic items." },
+                    { level: 40, text: "Safe passage allowed." },
+                    { level: 60, text: "Invitations to hidden sanctuaries." },
+                    { level: 80, text: "Mages weave protective spells." },
+                    { level: 100, text: "Access to powerful enchantments." }
+                ]
+            },
+            "City": {
+                negative: [
+                    { level: -100, text: "City bars the party entry." },
+                    { level: -80, text: "Residents alert hostile factions." },
+                    { level: -60, text: "Guides and merchants refuse service." },
+                    { level: -40, text: "Merchants overcharge (50% increase)." },
+                    { level: -20, text: "Locals distrust the party." }
+                ],
+                positive: [
+                    { level: 20, text: "Reduced cost for guides and maps." },
+                    { level: 40, text: "Discounts on local goods." },
+                    { level: 60, text: "Free guides and equipment." },
+                    { level: 80, text: "Local escorts provided." },
+                    { level: 100, text: "Free lodging and supplies." }
+                ]
+            }
+        };
+
+        function generateSuggestions(factionIndex) {
+            const faction = worldData.factions[factionIndex];
+            const descriptors = faction.descriptors || [];
+            
+            if (descriptors.length === 0) {
+                alert("Please select at least one descriptor to generate suggestions.");
+                return;
+            }
+
+            const suggestions = {};
+            const allSuggestions = {}; // Collect all suggestions per level
+
+            // Collect suggestions from all selected descriptors
+            descriptors.forEach(desc => {
+                const template = suggestionTemplates[desc];
+                if (template) {
+                    template.negative.forEach(item => {
+                        if (!allSuggestions[item.level]) {
+                            allSuggestions[item.level] = [];
+                        }
+                        allSuggestions[item.level].push(item.text);
+                    });
+                    template.positive.forEach(item => {
+                        if (!allSuggestions[item.level]) {
+                            allSuggestions[item.level] = [];
+                        }
+                        allSuggestions[item.level].push(item.text);
+                    });
+                }
+            });
+
+            // For each level, pick the best suggestion or combine them
+            Object.keys(allSuggestions).forEach(level => {
+                const levelSuggestions = allSuggestions[level];
+                if (levelSuggestions.length === 1) {
+                    suggestions[level] = levelSuggestions[0];
+                } else {
+                    // If multiple descriptors, prefer more specific ones or combine concepts
+                    // For now, randomly pick one, but you could make this smarter
+                    suggestions[level] = levelSuggestions[Math.floor(Math.random() * levelSuggestions.length)];
+                }
+            });
+
+            // Add neutral suggestion if missing
+            if (!suggestions[0]) {
+                const neutralTexts = [
+                    "Neutral stance; standard behavior.",
+                    "Neutral stance; they observe you.",
+                    "Neutral stance; no special treatment.",
+                    "Neutral stance; standard services."
+                ];
+                suggestions[0] = neutralTexts[Math.floor(Math.random() * neutralTexts.length)];
+            }
+
+            // Ensure we have suggestions for all standard levels
+            const standardLevels = [-100, -80, -60, -40, -20, 0, 20, 40, 60, 80, 100];
+            standardLevels.forEach(level => {
+                if (!suggestions[level]) {
+                    // Generate a generic suggestion based on descriptors
+                    const isNegative = level < 0;
+                    const isCity = descriptors.includes("City");
+                    const isPirate = descriptors.includes("Pirate");
+                    const isMerchant = descriptors.includes("Merchant");
+                    const isReligious = descriptors.includes("Religious");
+                    
+                    if (isNegative) {
+                        if (isCity) {
+                            suggestions[level] = `City residents become increasingly hostile.`;
+                        } else if (isPirate) {
+                            suggestions[level] = `Pirates target the party more frequently.`;
+                        } else if (isMerchant) {
+                            suggestions[level] = `Merchants refuse to deal with the party.`;
+                        } else {
+                            suggestions[level] = `The faction becomes increasingly hostile.`;
+                        }
+                    } else if (level > 0) {
+                        if (isCity) {
+                            suggestions[level] = `City provides better services and discounts.`;
+                        } else if (isPirate) {
+                            suggestions[level] = `Pirates offer better deals and safe passage.`;
+                        } else if (isMerchant) {
+                            suggestions[level] = `Merchants offer exclusive deals and rare goods.`;
+                        } else if (isReligious) {
+                            suggestions[level] = `Religious authorities grant blessings and access.`;
+                        } else {
+                            suggestions[level] = `The faction provides increasing benefits.`;
+                        }
+                    }
+                }
+            });
+
+            // Display suggestions in modal
+            showSuggestionsModal(factionIndex, faction.name, suggestions);
+        }
+
+        let currentSuggestions = {}; // Store suggestions globally for applyAll
+
+        function showSuggestionsModal(factionIndex, factionName, suggestions) {
+            const modal = document.getElementById("suggestionsModal");
+            const content = document.getElementById("suggestionsContent");
+            const title = document.getElementById("modalTitle");
+            
+            // Store suggestions globally
+            currentSuggestions = { ...suggestions };
+            modal.setAttribute('data-faction-index', factionIndex);
+            
+            title.textContent = `Bonus Suggestions for ${factionName}`;
+            content.innerHTML = "";
+            
+            const sortedLevels = Object.keys(suggestions).sort((a, b) => parseInt(a) - parseInt(b));
+            
+            sortedLevels.forEach(level => {
+                const div = document.createElement("div");
+                div.className = "suggestion-item";
+                const escapedText = suggestions[level].replace(/'/g, "&#39;").replace(/"/g, "&quot;");
+                div.innerHTML = `
+                    <h4>Renown Level: ${level}</h4>
+                    <p>${suggestions[level]}</p>
+                    <button onclick="applySuggestion(${factionIndex}, ${level}, '${escapedText}')">Apply This Suggestion</button>
+                `;
+                content.appendChild(div);
+            });
+
+            // Add "Apply All" button
+            const applyAllDiv = document.createElement("div");
+            applyAllDiv.style.textAlign = "center";
+            applyAllDiv.style.marginTop = "20px";
+            const applyAllBtn = document.createElement("button");
+            applyAllBtn.className = "success";
+            applyAllBtn.textContent = "Apply All Suggestions";
+            applyAllBtn.onclick = () => applyAllSuggestions(factionIndex);
+            applyAllDiv.appendChild(applyAllBtn);
+            content.appendChild(applyAllDiv);
+
+            modal.style.display = "block";
+        }
+
+        function closeSuggestionsModal() {
+            document.getElementById("suggestionsModal").style.display = "none";
+        }
+
+        function applySuggestion(factionIndex, level, text) {
+            if (!worldData.factions[factionIndex].bonuses) {
+                worldData.factions[factionIndex].bonuses = {};
+            }
+            // Unescape HTML entities
+            const unescapedText = text.replace(/&#39;/g, "'").replace(/&quot;/g, '"');
+            worldData.factions[factionIndex].bonuses[level] = unescapedText;
+            renderFactions();
+            showMessage("Suggestion applied!", "success");
+        }
+
+        function applyAllSuggestions(factionIndex) {
+            if (!worldData.factions[factionIndex].bonuses) {
+                worldData.factions[factionIndex].bonuses = {};
+            }
+            Object.keys(currentSuggestions).forEach(level => {
+                worldData.factions[factionIndex].bonuses[level] = currentSuggestions[level];
+            });
+            renderFactions();
+            closeSuggestionsModal();
+            showMessage("All suggestions applied!", "success");
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById("suggestionsModal");
+            if (event.target === modal) {
+                closeSuggestionsModal();
+            }
         }
 
         // Initialize
