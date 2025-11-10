@@ -1144,31 +1144,48 @@
             const container = document.getElementById("relationshipsList");
             container.innerHTML = "";
             
-            worldData.factions.forEach(faction => {
+            worldData.factions.forEach((faction, index) => {
                 if (!worldData.relationships[faction.name]) {
                     worldData.relationships[faction.name] = { friends: [], enemies: [] };
                 }
                 
+                const friends = worldData.relationships[faction.name].friends || [];
+                const enemies = worldData.relationships[faction.name].enemies || [];
+                const friendsList = friends.length > 0 ? friends.join(', ') : 'None';
+                const enemiesList = enemies.length > 0 ? enemies.join(', ') : 'None';
+                
                 const div = document.createElement("div");
                 div.className = "faction-item";
                 div.innerHTML = `
-                    <h3>${faction.name}</h3>
-                    <div class="form-group">
-                        <label>Friends:</label>
-                        <div id="friends-${faction.name}"></div>
-                        <button onclick="addRelationship('${faction.name}', 'friends')">+ Add Friend</button>
+                    <div class="faction-header" onclick="toggleRelationship('${faction.name}')">
+                        <div>
+                            <h3>${faction.name}</h3>
+                            <div class="faction-summary">
+                                <span>🤝 ${friends.length} friends</span>
+                                <span>⚔️ ${enemies.length} enemies</span>
+                                <span style="font-size: 0.85em; color: #888;">Friends: ${friendsList}</span>
+                                <span style="font-size: 0.85em; color: #888;">Enemies: ${enemiesList}</span>
+                            </div>
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label>Enemies:</label>
-                        <div id="enemies-${faction.name}"></div>
-                        <button onclick="addRelationship('${faction.name}', 'enemies')">+ Add Enemy</button>
+                    <div class="faction-content collapsed" id="relationship-content-${faction.name}">
+                        <div class="form-group">
+                            <label>Friends:</label>
+                            <div id="friends-${faction.name}"></div>
+                            <button onclick="addRelationship('${faction.name}', 'friends')">+ Add Friend</button>
+                        </div>
+                        <div class="form-group">
+                            <label>Enemies:</label>
+                            <div id="enemies-${faction.name}"></div>
+                            <button onclick="addRelationship('${faction.name}', 'enemies')">+ Add Enemy</button>
+                        </div>
                     </div>
                 `;
                 container.appendChild(div);
                 
                 // Render friends
                 const friendsContainer = document.getElementById(`friends-${faction.name}`);
-                worldData.relationships[faction.name].friends.forEach((friend, idx) => {
+                friends.forEach((friend, idx) => {
                     const relDiv = document.createElement("div");
                     relDiv.className = "relationship-entry";
                     relDiv.innerHTML = `
@@ -1182,7 +1199,7 @@
                 
                 // Render enemies
                 const enemiesContainer = document.getElementById(`enemies-${faction.name}`);
-                worldData.relationships[faction.name].enemies.forEach((enemy, idx) => {
+                enemies.forEach((enemy, idx) => {
                     const relDiv = document.createElement("div");
                     relDiv.className = "relationship-entry";
                     relDiv.innerHTML = `
@@ -1897,6 +1914,14 @@
         // Faction collapse
         function toggleFaction(index) {
             const content = document.getElementById(`faction-content-${index}`);
+            if (content) {
+                content.classList.toggle('collapsed');
+            }
+        }
+
+        // Relationship collapse
+        function toggleRelationship(factionName) {
+            const content = document.getElementById(`relationship-content-${factionName}`);
             if (content) {
                 content.classList.toggle('collapsed');
             }
