@@ -42,21 +42,91 @@
         .nav-buttons button:hover {
             background: #6bb0ff;
         }
+        .tabs {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #4a9eff;
+        }
+        .tab {
+            padding: 10px 20px;
+            background: rgba(74, 158, 255, 0.1);
+            border: 1px solid #4a9eff;
+            border-bottom: none;
+            border-radius: 5px 5px 0 0;
+            cursor: pointer;
+            color: #b0c4de;
+            transition: all 0.3s ease;
+        }
+        .tab:hover {
+            background: rgba(74, 158, 255, 0.2);
+            color: #e0e0e0;
+        }
+        .tab.active {
+            background: rgba(74, 158, 255, 0.3);
+            color: #4a9eff;
+            font-weight: bold;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
         .section {
             background: rgba(255, 255, 255, 0.05);
             border: 1px solid #4a9eff;
-            border-radius: 10px;
-            padding: 20px;
-            margin-bottom: 20px;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
         }
         .section h2 {
             color: #4a9eff;
             margin-top: 0;
-            border-bottom: 2px solid #4a9eff;
-            padding-bottom: 10px;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+            border-bottom: 1px solid #4a9eff;
+            padding-bottom: 8px;
+        }
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+        .collapsible::before {
+            content: '▼ ';
+            display: inline-block;
+            transition: transform 0.3s ease;
+            margin-right: 5px;
+        }
+        .collapsible.collapsed::before {
+            transform: rotate(-90deg);
+        }
+        .collapsible-content {
+            max-height: 1000px;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+        .collapsible-content.collapsed {
+            max-height: 0;
+            overflow: hidden;
         }
         .form-group {
-            margin-bottom: 15px;
+            margin-bottom: 10px;
+        }
+        .form-group label {
+            font-size: 0.9em;
+            margin-bottom: 3px;
+        }
+        .compact-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+        }
+        .compact-grid .form-group {
+            margin-bottom: 8px;
+        }
+        .compact-grid label {
+            font-size: 0.85em;
         }
         label {
             display: block;
@@ -118,30 +188,59 @@
             background: rgba(255, 255, 255, 0.03);
             border: 1px solid #4a9eff;
             border-radius: 5px;
-            padding: 15px;
-            margin-bottom: 15px;
+            padding: 10px;
+            margin-bottom: 10px;
         }
         .faction-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
+            cursor: pointer;
         }
         .faction-header h3 {
             margin: 0;
             color: #4a9eff;
+            font-size: 1.1em;
+        }
+        .faction-content {
+            max-height: 2000px;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+        .faction-content.collapsed {
+            max-height: 0;
+            overflow: hidden;
+            padding: 0;
+        }
+        .faction-summary {
+            display: flex;
+            gap: 15px;
+            font-size: 0.9em;
+            color: #b0c4de;
+            margin-top: 5px;
+        }
+        .faction-summary span {
+            display: flex;
+            align-items: center;
+            gap: 5px;
         }
         .bonus-entry {
             display: flex;
-            gap: 10px;
-            margin-bottom: 10px;
+            gap: 8px;
+            margin-bottom: 8px;
             align-items: center;
         }
         .bonus-entry input[type="number"] {
-            width: 100px;
+            width: 80px;
+            padding: 4px;
+            font-size: 0.9em;
         }
         .bonus-entry textarea {
             flex: 1;
+            padding: 4px;
+            font-size: 0.9em;
+            min-height: 30px;
         }
         .relationship-entry {
             display: flex;
@@ -329,17 +428,27 @@
 
         <div id="message"></div>
 
-        <div class="section">
-            <h2>World Settings</h2>
-            <div class="form-group">
-                <label>World Name:</label>
-                <input type="text" id="worldName" placeholder="Enter world name">
-            </div>
+        <div class="tabs">
+            <div class="tab active" onclick="switchTab(event, 'world')">World & Theme</div>
+            <div class="tab" onclick="switchTab(event, 'factions')">Factions & Cities</div>
+            <div class="tab" onclick="switchTab(event, 'relationships')">Relationships</div>
         </div>
 
-        <div class="section">
-            <h2>Theme & Styling</h2>
-            <div class="two-column">
+        <div id="tab-world" class="tab-content active">
+            <div class="section">
+                <h2 class="collapsible" onclick="toggleCollapse(this)">World Settings</h2>
+                <div class="collapsible-content">
+                    <div class="form-group">
+                        <label>World Name:</label>
+                        <input type="text" id="worldName" placeholder="Enter world name">
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2 class="collapsible" onclick="toggleCollapse(this)">Theme & Styling</h2>
+                <div class="collapsible-content">
+                    <div class="compact-grid">
                 <div class="form-group">
                     <label>Font Family:</label>
                     <select id="fontFamily">
@@ -411,18 +520,26 @@
                     <input type="color" id="negativeColor2" value="#dc143c">
                     <span class="color-preview" id="negativePreview2"></span>
                 </div>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <div class="section">
-            <h2>Factions & Cities</h2>
-            <div id="factionsList"></div>
-            <button onclick="addFaction()">+ Add Faction/City</button>
+        <div id="tab-factions" class="tab-content">
+            <div class="section">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <h2 style="margin: 0;">Factions & Cities</h2>
+                    <button onclick="addFaction()">+ Add Faction/City</button>
+                </div>
+                <div id="factionsList"></div>
+            </div>
         </div>
 
-        <div class="section">
-            <h2>Relationships</h2>
-            <div id="relationshipsList"></div>
+        <div id="tab-relationships" class="tab-content">
+            <div class="section">
+                <h2>Relationships</h2>
+                <div id="relationshipsList"></div>
+            </div>
         </div>
 
         <div class="actions">
@@ -842,29 +959,42 @@
             worldData.factions.forEach((faction, index) => {
                 const div = document.createElement("div");
                 div.className = "faction-item";
+                const bonusCount = Object.keys(faction.bonuses || {}).length;
+                const descriptorCount = (faction.descriptors || []).length;
+                const descriptorsList = (faction.descriptors || []).join(', ') || 'None';
+                
                 div.innerHTML = `
-                    <div class="faction-header">
-                        <h3>${faction.name}</h3>
-                        <button class="danger" onclick="removeFaction(${index})">Remove</button>
-                    </div>
-                    <div class="form-group">
-                        <label>Name:</label>
-                        <input type="text" value="${faction.name}" onchange="updateFactionName(${index}, this.value)">
-                    </div>
-                    <div class="form-group">
-                        <label>Faction/City Type & Descriptors:</label>
-                        <div class="descriptor-selector">
-                            <select id="descriptor-select-${index}" onchange="addDescriptor(${index}, this.value)">
-                                <option value="">-- Select a descriptor to add --</option>
-                            </select>
-                            <button onclick="generateSuggestions(${index})">✨ Generate Bonus Suggestions</button>
+                    <div class="faction-header" onclick="toggleFaction(${index})">
+                        <div>
+                            <h3>${faction.name}</h3>
+                            <div class="faction-summary">
+                                <span>📋 ${bonusCount} bonuses</span>
+                                <span>🏷️ ${descriptorCount} descriptors</span>
+                                <span style="font-size: 0.85em; color: #888;">${descriptorsList}</span>
+                            </div>
                         </div>
-                        <div class="selected-descriptors" id="selected-descriptors-${index}"></div>
+                        <button class="danger" onclick="event.stopPropagation(); removeFaction(${index})">Remove</button>
                     </div>
-                    <div class="form-group">
-                        <label>Bonuses/Penalties:</label>
-                        <div id="bonuses-${index}"></div>
-                        <button onclick="addBonus(${index})">+ Add Bonus/Penalty</button>
+                    <div class="faction-content collapsed" id="faction-content-${index}">
+                        <div class="form-group">
+                            <label>Name:</label>
+                            <input type="text" value="${faction.name}" onchange="updateFactionName(${index}, this.value)">
+                        </div>
+                        <div class="form-group">
+                            <label>Faction/City Type & Descriptors:</label>
+                            <div class="descriptor-selector">
+                                <select id="descriptor-select-${index}" onchange="addDescriptor(${index}, this.value)">
+                                    <option value="">-- Select a descriptor to add --</option>
+                                </select>
+                                <button onclick="generateSuggestions(${index})">✨ Generate Suggestions</button>
+                            </div>
+                            <div class="selected-descriptors" id="selected-descriptors-${index}"></div>
+                        </div>
+                        <div class="form-group">
+                            <label>Bonuses/Penalties:</label>
+                            <div id="bonuses-${index}"></div>
+                            <button onclick="addBonus(${index})">+ Add Bonus/Penalty</button>
+                        </div>
                     </div>
                 `;
                 container.appendChild(div);
@@ -1741,6 +1871,34 @@
             const modal = document.getElementById("suggestionsModal");
             if (event.target === modal) {
                 closeSuggestionsModal();
+            }
+        }
+
+        // Tab switching
+        function switchTab(event, tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            // Show selected tab
+            event.target.classList.add('active');
+            document.getElementById(`tab-${tabName}`).classList.add('active');
+        }
+
+        // Collapsible sections
+        function toggleCollapse(element) {
+            element.classList.toggle('collapsed');
+            const content = element.nextElementSibling;
+            if (content) {
+                content.classList.toggle('collapsed');
+            }
+        }
+
+        // Faction collapse
+        function toggleFaction(index) {
+            const content = document.getElementById(`faction-content-${index}`);
+            if (content) {
+                content.classList.toggle('collapsed');
             }
         }
 
