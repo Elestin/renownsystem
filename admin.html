@@ -76,6 +76,11 @@
             color: #e0e0e0;
             font-family: inherit;
         }
+        select option {
+            background: #1a1a2e;
+            color: #e0e0e0;
+            padding: 5px;
+        }
         input[type="color"] {
             width: 60px;
             height: 40px;
@@ -227,6 +232,23 @@
         }
         .descriptor-selector select {
             flex: 1;
+            padding: 8px;
+            border: 1px solid #4a9eff;
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #e0e0e0;
+            font-family: inherit;
+            font-size: 1em;
+        }
+        .descriptor-selector select option {
+            background: #1a1a2e;
+            color: #e0e0e0;
+            padding: 5px;
+        }
+        .descriptor-selector select:focus {
+            outline: none;
+            border-color: #6bb0ff;
+            background: rgba(255, 255, 255, 0.15);
         }
         .selected-descriptors {
             display: flex;
