@@ -671,6 +671,8 @@
                     }
                 }
             };
+            // Save to localStorage so it persists
+            localStorage.setItem("worldData", JSON.stringify(worldData));
             renderAll();
             showMessage("Default world loaded", "success");
         }
