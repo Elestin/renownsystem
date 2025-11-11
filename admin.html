@@ -616,279 +616,58 @@
                     negativeColor2: "#dc143c"
                 },
                 factions: [
-                    { name: "Horizon Guard", bonuses: {
-                        "-100": "Full bounty issued; attacked on sight.",
-                        "-80": "Guard pursues the party aggressively.",
-                        "-60": "Docking privileges denied.",
-                        "-40": "Frequent inspections delay travel.",
-                        "-20": "Guard is suspicious and unfriendly.",
-                        "0": "Neutral stance; standard naval behavior.",
-                        "20": "Minor supplies provided for free.",
-                        "40": "Discounted repairs (50%) at Guard docks.",
-                        "60": "Access to naval intelligence.",
-                        "80": "Free ship upgrades.",
-                        "100": "Full naval support in conflicts."
+                    { name: "Example Faction A", bonuses: {
+                        "-100": "Faction A declares you an enemy and attacks on sight.",
+                        "-80": "Faction A actively hunts the party.",
+                        "-60": "Faction A denies services and access.",
+                        "-40": "Faction A is hostile and uncooperative.",
+                        "-20": "Faction A is suspicious and wary.",
+                        "0": "Neutral stance; standard behavior.",
+                        "20": "Faction A provides minor assistance.",
+                        "40": "Faction A offers discounts and basic services.",
+                        "60": "Faction A provides significant support.",
+                        "80": "Faction A grants access to exclusive resources.",
+                        "100": "Faction A fully supports the party."
                     }},
-                    { name: "Abyssal Blades", bonuses: {
-                        "-100": "Fleet relentlessly hunts the party.",
-                        "-80": "Bounty issued; pirates target the party.",
-                        "-60": "Frequent pirate ambushes.",
-                        "-40": "Pirates demand gold or tribute.",
-                        "-20": "Increased chance of pirate encounters.",
-                        "0": "Neutral stance; pirates may ignore the party.",
-                        "20": "Discounts on smuggled goods (20%).",
-                        "40": "Safe passage in pirate-controlled areas.",
-                        "60": "Black-market goods provided at no cost.",
-                        "80": "Free crew recruitment.",
-                        "100": "Full pirate fleet support."
+                    { name: "Example Faction B", bonuses: {
+                        "-100": "Faction B marks you for elimination.",
+                        "-80": "Faction B actively works against you.",
+                        "-60": "Faction B blocks your access to resources.",
+                        "-40": "Faction B is unfriendly and obstructive.",
+                        "-20": "Faction B is cautious around you.",
+                        "0": "Neutral stance; no special treatment.",
+                        "20": "Faction B offers basic cooperation.",
+                        "40": "Faction B provides helpful services.",
+                        "60": "Faction B shares valuable information.",
+                        "80": "Faction B grants special privileges.",
+                        "100": "Faction B becomes a strong ally."
                     }},
-                    { name: "Azure Syndicate", bonuses: {
-                        "-100": "Syndicate sabotages the party's plans.",
-                        "-80": "Trade routes blocked.",
-                        "-60": "Merchants refuse to trade.",
-                        "-40": "False rumors spread about the party.",
-                        "-20": "Minor overcharging on goods/services.",
-                        "0": "Neutral stance; standard trade behavior.",
-                        "20": "Access to black-market auctions.",
-                        "40": "Discounts on rare items (50%).",
-                        "60": "Syndicate brokers alliances for the party.",
-                        "80": "Reveals hidden relic locations.",
-                        "100": "Free access to rare treasures."
-                    }},
-                    { name: "Gilded Corsairs", bonuses: {
-                        "-100": "Full-scale Corsair fleet hunts you as a threat.",
-                        "-80": "Corsair captains conspire to sink your ship.",
-                        "-60": "Corsairs issue fines or bribes to naval authorities.",
-                        "-40": "Corsairs sabotage your reputation.",
-                        "-20": "Corsairs extort gold from you at ports.",
-                        "0": "Neutral stance; they treat you with distant politeness.",
-                        "20": "Discounts on luxury goods and repairs (25%).",
-                        "40": "Safe passage through Corsair waters.",
-                        "60": "Lavish gifts provided.",
-                        "80": "Invitation to exclusive Corsair galas.",
-                        "100": "Access to a treasure vault filled with rare magic items."
-                    }},
-                    { name: "Bloody Tide", bonuses: {
-                        "-100": "Bloody Tide wages a bloody vendetta against you.",
-                        "-80": "Bloody Tide sets fire to ports you visit.",
-                        "-60": "Threatening warnings (bloody flags) left wherever you dock.",
-                        "-40": "Bloody Tide ambushes your allies or crew.",
-                        "-20": "Bloody Tide raiders target your ship for loot.",
-                        "0": "Neutral stance; Bloody Tide won't bother you unless provoked.",
-                        "20": "Discounts on black-market weapons (20%).",
-                        "40": "Bloody Tide ships avoid attacking you.",
-                        "60": "Tribute from captured villages is shared with you.",
-                        "80": "Bloody Tide allies join you in raids.",
-                        "100": "Declared Butcher of the Seas."
-                    }},
-                    { name: "Ebon Oath", bonuses: {
-                        "-100": "Sea monsters hunt you relentlessly.",
-                        "-80": "The cult declares you an enemy.",
-                        "-60": "Ebon Oath zealots attack in coordinated ambushes.",
-                        "-40": "Dark rituals disrupt your supplies.",
-                        "-20": "Cultists spread unsettling rumors.",
-                        "0": "Neutral stance; the cult observes you.",
-                        "20": "Zealots provide intelligence.",
-                        "40": "Safe haven in Ebon sanctuaries.",
-                        "60": "Access to Ebon Oath rituals.",
-                        "80": "Zealots sacrifice to complete your goals.",
-                        "100": "Initiated into Ebon Oath leadership."
-                    }},
-                    { name: "Shadowfang Fleet", bonuses: {
-                        "-100": "Fleet declares you a target for elimination.",
-                        "-80": "Spies infiltrate your crew.",
-                        "-60": "Fleet ships ambush you.",
-                        "-40": "Shadowfang captains set traps.",
-                        "-20": "Fleet agents monitor your ship's movements.",
-                        "0": "Neutral stance; the fleet watches silently.",
-                        "20": "Discounts on stealth-related magic items (20%).",
-                        "40": "Shadowfang spies provide intelligence.",
-                        "60": "Access to shadow-enhanced gear.",
-                        "80": "Secret routes revealed.",
-                        "100": "Fleet provides assassination or espionage services."
-                    }},
-                    { name: "Driftwood Marauders", bonuses: {
-                        "-100": "Marauders dismantle your ship.",
-                        "-80": "Marauders spread false rumors.",
-                        "-60": "Driftwood ships ambush you to steal supplies.",
-                        "-40": "Scavengers strip your ship of valuable parts.",
-                        "-20": "Marauders sabotage your repairs.",
-                        "0": "Neutral stance; they ignore you.",
-                        "20": "Repairs and upgrades cost 20% less.",
-                        "40": "Docking at Driftwood outposts allowed.",
-                        "60": "Access to unique scavenged items.",
-                        "80": "Free access to improvised magic gear.",
-                        "100": "Driftwood Marauders repair your ship for free."
-                    }},
-                    { name: "Siren's Grasp", bonuses: {
-                        "-100": "Leaders target you with illusions.",
-                        "-80": "Allies turned against you by sirens.",
-                        "-60": "Navigation obscured by illusion magic.",
-                        "-40": "Ambushes by enchanted ships.",
-                        "-20": "Sirens attempt to manipulate you.",
-                        "0": "Neutral stance; they observe silently.",
-                        "20": "Discounts on illusion-related magic items.",
-                        "40": "Safe passage allowed.",
-                        "60": "Invitations to hidden sanctuaries.",
-                        "80": "Enchanters weave protective spells.",
-                        "100": "Access to their powerful enchantments."
-                    }},
-                    { name: "Thunderclaw Reavers", bonuses: {
-                        "-100": "Full fleet hunts you.",
-                        "-80": "Declare your ship an enemy.",
-                        "-60": "Intercept your trade routes.",
-                        "-40": "Raid your ship for supplies.",
-                        "-20": "Challenge you to duels at port.",
-                        "0": "Neutral stance; respect but no alliance.",
-                        "20": "Discounts on weapons and supplies.",
-                        "40": "Safe passage through waters.",
-                        "60": "Reavers provide protection.",
-                        "80": "Access to crafted weapons.",
-                        "100": "Full fleet fights alongside you."
-                    }},
-                    { name: "Frostfang Raiders", bonuses: {
-                        "-100": "Full fleet wages war on you.",
-                        "-80": "Shamans destroy your sails with storm magic.",
-                        "-60": "Ambushes on frozen coasts.",
-                        "-40": "Raiders freeze your supplies.",
-                        "-20": "Shamans summon storms to delay you.",
-                        "0": "Neutral stance; they ignore you.",
-                        "20": "Discounts on cold-related items.",
-                        "40": "Weather protection provided.",
-                        "60": "Access to enchanted ice-forged weapons.",
-                        "80": "Raiders fight alongside you.",
-                        "100": "Shamans teach you storm magic."
-                    }},
-                    { name: "City: Olivara", bonuses: {
-                        "-100": "City bars the party entry.",
-                        "-80": "Residents alert hostile factions.",
-                        "-60": "Guides and merchants refuse service.",
-                        "-40": "Merchants overcharge (50% increase).",
-                        "-20": "Locals distrust the party.",
-                        "0": "Neutral stance; standard services.",
-                        "20": "Reduced cost for guides and maps.",
-                        "40": "Discounts on jungle tools.",
-                        "60": "Free jungle guides and equipment.",
-                        "80": "Rangers escort the party.",
-                        "100": "Free lodging and supplies."
-                    }},
-                    { name: "City: Azurin", bonuses: {
-                        "-100": "Pirates attack on sight.",
-                        "-80": "Residents refuse aid.",
-                        "-60": "Local pirates sabotage the party.",
-                        "-40": "Merchants overcharge.",
-                        "-20": "Locals distrust the party.",
-                        "0": "Neutral pirate city behavior.",
-                        "20": "Minor discounts in pirate markets.",
-                        "40": "Reduced prices on black-market goods.",
-                        "60": "Access to safe harbors.",
-                        "80": "Free ship upgrades.",
-                        "100": "Pirates rally to defend the party."
-                    }},
-                    { name: "City: Quintara", bonuses: {
-                        "-100": "City bans the party from markets.",
-                        "-80": "Merchants block trade routes.",
-                        "-60": "Merchants spread false rumors.",
-                        "-40": "Goods cost 50% more.",
-                        "-20": "Merchants are wary.",
-                        "0": "Neutral stance; standard trade.",
-                        "20": "Merchant guilds share trade info.",
-                        "40": "Access to exclusive markets.",
-                        "60": "Rare goods available.",
-                        "80": "Merchants prioritize your trades.",
-                        "100": "Free trade permits granted."
-                    }},
-                    { name: "City: Halcyona", bonuses: {
-                        "-100": "Declared heretics; full ban from city.",
-                        "-80": "Residents refuse to interact.",
-                        "-60": "City officials block access.",
-                        "-40": "Merchants and priests overcharge.",
-                        "-20": "Locals are suspicious.",
-                        "0": "Neutral stance.",
-                        "20": "Access to festivals and blessings.",
-                        "40": "Discounts on magical rituals.",
-                        "60": "Free divine blessings.",
-                        "80": "Priests grant rare relics.",
-                        "100": "Full divine support for the party."
-                    }},
-                    { name: "City: Tritonus", bonuses: {
-                        "-100": "City bans the party from docks.",
-                        "-80": "Engineers sabotage the party's ship.",
-                        "-60": "Merchants overcharge for repairs.",
-                        "-40": "Ship repairs delayed.",
-                        "-20": "Shipbuilders are uncooperative.",
-                        "0": "Neutral stance.",
-                        "20": "Minor discounts on repairs.",
-                        "40": "Discounts on advanced upgrades.",
-                        "60": "Access to innovative ship prototypes.",
-                        "80": "Priority access to prototypes.",
-                        "100": "Free advanced maritime technology."
+                    { name: "Example City", bonuses: {
+                        "-100": "City bars entry to the party.",
+                        "-80": "City residents are hostile.",
+                        "-60": "City services are denied.",
+                        "-40": "City merchants overcharge significantly.",
+                        "-20": "City residents are distrustful.",
+                        "0": "Neutral stance; standard city services.",
+                        "20": "City provides minor discounts.",
+                        "40": "City offers helpful guides and services.",
+                        "60": "City grants access to exclusive areas.",
+                        "80": "City provides free lodging and supplies.",
+                        "100": "City honors the party as heroes."
                     }}
                 ],
                 relationships: {
-                    "Horizon Guard": {
+                    "Example Faction A": {
+                        friends: ["Example City"],
+                        enemies: ["Example Faction B"]
+                    },
+                    "Example Faction B": {
                         friends: [],
-                        enemies: ["Abyssal Blades", "Azure Syndicate", "Pirates"]
+                        enemies: ["Example Faction A"]
                     },
-                    "Abyssal Blades": {
-                        friends: ["Ebon Oath"],
-                        enemies: ["Horizon Guard", "Azure Syndicate"]
-                    },
-                    "Azure Syndicate": {
-                        friends: ["Gilded Corsairs"],
-                        enemies: ["Bloody Tide", "Horizon Guard"]
-                    },
-                    "Gilded Corsairs": {
-                        friends: ["Azure Syndicate"],
-                        enemies: ["Bloody Tide", "Driftwood Marauders"]
-                    },
-                    "Bloody Tide": {
-                        friends: [],
-                        enemies: ["Everyone"]
-                    },
-                    "Ebon Oath": {
-                        friends: ["Abyssal Blades"],
-                        enemies: ["Halcyona", "Horizon Guard"]
-                    },
-                    "Shadowfang Fleet": {
-                        friends: ["Ebon Oath"],
-                        enemies: ["Thunderclaw Reavers"]
-                    },
-                    "Driftwood Marauders": {
-                        friends: ["Thunderclaw Reavers"],
-                        enemies: ["Gilded Corsairs"]
-                    },
-                    "Siren's Grasp": {
-                        friends: ["Azure Syndicate"],
-                        enemies: ["Frostfang Raiders"]
-                    },
-                    "Thunderclaw Reavers": {
-                        friends: ["Driftwood Marauders"],
-                        enemies: ["Shadowfang Fleet", "Bloody Tide"]
-                    },
-                    "Frostfang Raiders": {
-                        friends: [],
-                        enemies: ["Siren's Grasp", "Horizon Guard"]
-                    },
-                    "City: Olivara": {
-                        friends: ["Horizon Guard"],
-                        enemies: ["Bloody Tide"]
-                    },
-                    "City: Azurin": {
-                        friends: ["Pirates"],
-                        enemies: ["Horizon Guard"]
-                    },
-                    "City: Quintara": {
-                        friends: ["Horizon Guard", "Azure Syndicate"],
-                        enemies: ["Abyssal Blades"]
-                    },
-                    "City: Halcyona": {
-                        friends: ["Horizon Guard", "Halcyona Scholars"],
-                        enemies: ["Ebon Oath"]
-                    },
-                    "City: Tritonus": {
-                        friends: ["Horizon Guard", "Azure Syndicate"],
-                        enemies: ["Bloody Tide"]
+                    "Example City": {
+                        friends: ["Example Faction A"],
+                        enemies: ["Example Faction B"]
                     }
                 }
             };

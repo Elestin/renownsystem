@@ -232,41 +232,58 @@
                     negativeColor2: "#dc143c"
                 },
                 factions: [
-                    { name: "Horizon Guard", bonuses: {
-                        "-100": "Full bounty issued; attacked on sight.",
-                        "-80": "Guard pursues the party aggressively.",
-                        "-60": "Docking privileges denied.",
-                        "-40": "Frequent inspections delay travel.",
-                        "-20": "Guard is suspicious and unfriendly.",
-                        "0": "Neutral stance; standard naval behavior.",
-                        "20": "Minor supplies provided for free.",
-                        "40": "Discounted repairs (50%) at Guard docks.",
-                        "60": "Access to naval intelligence.",
-                        "80": "Free ship upgrades.",
-                        "100": "Full naval support in conflicts."
+                    { name: "Example Faction A", bonuses: {
+                        "-100": "Faction A declares you an enemy and attacks on sight.",
+                        "-80": "Faction A actively hunts the party.",
+                        "-60": "Faction A denies services and access.",
+                        "-40": "Faction A is hostile and uncooperative.",
+                        "-20": "Faction A is suspicious and wary.",
+                        "0": "Neutral stance; standard behavior.",
+                        "20": "Faction A provides minor assistance.",
+                        "40": "Faction A offers discounts and basic services.",
+                        "60": "Faction A provides significant support.",
+                        "80": "Faction A grants access to exclusive resources.",
+                        "100": "Faction A fully supports the party."
                     }},
-                    { name: "Abyssal Blades", bonuses: {
-                        "-100": "Fleet relentlessly hunts the party.",
-                        "-80": "Bounty issued; pirates target the party.",
-                        "-60": "Frequent pirate ambushes.",
-                        "-40": "Pirates demand gold or tribute.",
-                        "-20": "Increased chance of pirate encounters.",
-                        "0": "Neutral stance; pirates may ignore the party.",
-                        "20": "Discounts on smuggled goods (20%).",
-                        "40": "Safe passage in pirate-controlled areas.",
-                        "60": "Black-market goods provided at no cost.",
-                        "80": "Free crew recruitment.",
-                        "100": "Full pirate fleet support."
+                    { name: "Example Faction B", bonuses: {
+                        "-100": "Faction B marks you for elimination.",
+                        "-80": "Faction B actively works against you.",
+                        "-60": "Faction B blocks your access to resources.",
+                        "-40": "Faction B is unfriendly and obstructive.",
+                        "-20": "Faction B is cautious around you.",
+                        "0": "Neutral stance; no special treatment.",
+                        "20": "Faction B offers basic cooperation.",
+                        "40": "Faction B provides helpful services.",
+                        "60": "Faction B shares valuable information.",
+                        "80": "Faction B grants special privileges.",
+                        "100": "Faction B becomes a strong ally."
+                    }},
+                    { name: "Example City", bonuses: {
+                        "-100": "City bars entry to the party.",
+                        "-80": "City residents are hostile.",
+                        "-60": "City services are denied.",
+                        "-40": "City merchants overcharge significantly.",
+                        "-20": "City residents are distrustful.",
+                        "0": "Neutral stance; standard city services.",
+                        "20": "City provides minor discounts.",
+                        "40": "City offers helpful guides and services.",
+                        "60": "City grants access to exclusive areas.",
+                        "80": "City provides free lodging and supplies.",
+                        "100": "City honors the party as heroes."
                     }}
                 ],
                 relationships: {
-                    "Horizon Guard": {
-                        friends: [],
-                        enemies: ["Abyssal Blades"]
+                    "Example Faction A": {
+                        friends: ["Example City"],
+                        enemies: ["Example Faction B"]
                     },
-                    "Abyssal Blades": {
+                    "Example Faction B": {
                         friends: [],
-                        enemies: ["Horizon Guard"]
+                        enemies: ["Example Faction A"]
+                    },
+                    "Example City": {
+                        friends: ["Example Faction A"],
+                        enemies: ["Example Faction B"]
                     }
                 }
             };

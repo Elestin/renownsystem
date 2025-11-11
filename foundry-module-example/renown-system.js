@@ -354,7 +354,7 @@ class RenownTracker extends Application {
   }
 
   getDefaultWorldData() {
-    // Return your default world data structure
+    // Return default world data with dummy factions to demonstrate the concept
     return {
       worldName: "Default World",
       theme: {
@@ -372,8 +372,61 @@ class RenownTracker extends Application {
         negativeColor1: "#b22222",
         negativeColor2: "#dc143c"
       },
-      factions: [],
-      relationships: {}
+      factions: [
+        { name: "Example Faction A", bonuses: {
+          "-100": "Faction A declares you an enemy and attacks on sight.",
+          "-80": "Faction A actively hunts the party.",
+          "-60": "Faction A denies services and access.",
+          "-40": "Faction A is hostile and uncooperative.",
+          "-20": "Faction A is suspicious and wary.",
+          "0": "Neutral stance; standard behavior.",
+          "20": "Faction A provides minor assistance.",
+          "40": "Faction A offers discounts and basic services.",
+          "60": "Faction A provides significant support.",
+          "80": "Faction A grants access to exclusive resources.",
+          "100": "Faction A fully supports the party."
+        }},
+        { name: "Example Faction B", bonuses: {
+          "-100": "Faction B marks you for elimination.",
+          "-80": "Faction B actively works against you.",
+          "-60": "Faction B blocks your access to resources.",
+          "-40": "Faction B is unfriendly and obstructive.",
+          "-20": "Faction B is cautious around you.",
+          "0": "Neutral stance; no special treatment.",
+          "20": "Faction B offers basic cooperation.",
+          "40": "Faction B provides helpful services.",
+          "60": "Faction B shares valuable information.",
+          "80": "Faction B grants special privileges.",
+          "100": "Faction B becomes a strong ally."
+        }},
+        { name: "Example City", bonuses: {
+          "-100": "City bars entry to the party.",
+          "-80": "City residents are hostile.",
+          "-60": "City services are denied.",
+          "-40": "City merchants overcharge significantly.",
+          "-20": "City residents are distrustful.",
+          "0": "Neutral stance; standard city services.",
+          "20": "City provides minor discounts.",
+          "40": "City offers helpful guides and services.",
+          "60": "City grants access to exclusive areas.",
+          "80": "City provides free lodging and supplies.",
+          "100": "City honors the party as heroes."
+        }}
+      ],
+      relationships: {
+        "Example Faction A": {
+          friends: ["Example City"],
+          enemies: ["Example Faction B"]
+        },
+        "Example Faction B": {
+          friends: [],
+          enemies: ["Example Faction A"]
+        },
+        "Example City": {
+          friends: ["Example Faction A"],
+          enemies: ["Example Faction B"]
+        }
+      }
     };
   }
 }
@@ -445,12 +498,79 @@ class RenownAdminConfig extends FormApplication {
   }
 
   getDefaultWorldData() {
-    // Return default world data
+    // Return default world data with dummy factions to demonstrate the concept
     return {
       worldName: "Default World",
-      theme: { /* ... */ },
-      factions: [],
-      relationships: {}
+      theme: {
+        fontFamily: "'IM Fell English SC', serif",
+        bgColor1: "#2e1a14",
+        bgColor2: "#4a3326",
+        textColor: "#f8e8c0",
+        headingColor: "#ffdd8b",
+        tableBg: "rgba(255, 248, 228, 0.9)",
+        tableBorder: "#523c23",
+        positiveColor1: "#2e8b57",
+        positiveColor2: "#66cdaa",
+        neutralColor1: "#4682b4",
+        neutralColor2: "#87cefa",
+        negativeColor1: "#b22222",
+        negativeColor2: "#dc143c"
+      },
+      factions: [
+        { name: "Example Faction A", bonuses: {
+          "-100": "Faction A declares you an enemy and attacks on sight.",
+          "-80": "Faction A actively hunts the party.",
+          "-60": "Faction A denies services and access.",
+          "-40": "Faction A is hostile and uncooperative.",
+          "-20": "Faction A is suspicious and wary.",
+          "0": "Neutral stance; standard behavior.",
+          "20": "Faction A provides minor assistance.",
+          "40": "Faction A offers discounts and basic services.",
+          "60": "Faction A provides significant support.",
+          "80": "Faction A grants access to exclusive resources.",
+          "100": "Faction A fully supports the party."
+        }},
+        { name: "Example Faction B", bonuses: {
+          "-100": "Faction B marks you for elimination.",
+          "-80": "Faction B actively works against you.",
+          "-60": "Faction B blocks your access to resources.",
+          "-40": "Faction B is unfriendly and obstructive.",
+          "-20": "Faction B is cautious around you.",
+          "0": "Neutral stance; no special treatment.",
+          "20": "Faction B offers basic cooperation.",
+          "40": "Faction B provides helpful services.",
+          "60": "Faction B shares valuable information.",
+          "80": "Faction B grants special privileges.",
+          "100": "Faction B becomes a strong ally."
+        }},
+        { name: "Example City", bonuses: {
+          "-100": "City bars entry to the party.",
+          "-80": "City residents are hostile.",
+          "-60": "City services are denied.",
+          "-40": "City merchants overcharge significantly.",
+          "-20": "City residents are distrustful.",
+          "0": "Neutral stance; standard city services.",
+          "20": "City provides minor discounts.",
+          "40": "City offers helpful guides and services.",
+          "60": "City grants access to exclusive areas.",
+          "80": "City provides free lodging and supplies.",
+          "100": "City honors the party as heroes."
+        }}
+      ],
+      relationships: {
+        "Example Faction A": {
+          friends: ["Example City"],
+          enemies: ["Example Faction B"]
+        },
+        "Example Faction B": {
+          friends: [],
+          enemies: ["Example Faction A"]
+        },
+        "Example City": {
+          friends: ["Example Faction A"],
+          enemies: ["Example Faction B"]
+        }
+      }
     };
   }
 }
