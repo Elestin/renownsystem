@@ -20,26 +20,26 @@
       <tbody>
         {{#each savedData}}
         <tr>
-          <td class="faction-name" data-faction="{{@key}}">{{@key}}</td>
+          <td class="faction-name" data-faction="{{this.name}}" title="{{this.name}}">{{this.name}}</td>
           <td>
             <input type="number" 
                    class="update-base-renown" 
-                   data-faction="{{@key}}"
+                   data-faction="{{this.name}}"
                    value="{{this.baseRenown}}">
           </td>
           <td>
             <input type="number" 
                    class="update-party-actions" 
-                   data-faction="{{@key}}"
+                   data-faction="{{this.name}}"
                    value="{{this.partyActions}}">
           </td>
           <td>{{this.crossFactionModifiers}}</td>
           <td>{{this.totalRenown}}</td>
           <td>
             <div class="renown-bar">
-              <div class="renown-level {{#if (gte this.totalRenown 50)}}positive{{else if (gte this.totalRenown 0)}}neutral{{else}}negative{{/if}}" 
-                   style="width: {{calculateWidth this.totalRenown}}%">
-                {{this.totalRenown}}
+              <div class="renown-level {{#if (gte this.totalRenownRaw 50)}}positive{{else if (gte this.totalRenownRaw 0)}}neutral{{else}}negative{{/if}}" 
+                   style="width: {{calculateBarWidth this.totalRenownRaw}}%">
+                {{this.totalRenownRaw}}
               </div>
             </div>
           </td>

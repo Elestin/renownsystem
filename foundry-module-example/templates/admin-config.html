@@ -1,0 +1,146 @@
+<form class="renown-admin-config">
+  <nav class="tabs" data-group="admin-tabs">
+    <a class="item" data-tab="world">World & Theme</a>
+    <a class="item" data-tab="factions">Factions & Cities</a>
+    <a class="item" data-tab="relationships">Relationships</a>
+  </nav>
+
+  <section class="content">
+    <!-- World & Theme Tab -->
+    <div class="tab" data-tab="world" data-group="admin-tabs">
+      <div class="form-group">
+        <label>World Name:</label>
+        <input type="text" name="worldName" value="{{worldData.worldName}}" placeholder="Enter world name">
+      </div>
+
+      <h3>Theme & Styling</h3>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Font Family:</label>
+          <select name="theme.fontFamily">
+            <option value="'IM Fell English SC', serif" {{#if (eq worldData.theme.fontFamily "'IM Fell English SC', serif")}}selected{{/if}}>IM Fell English SC</option>
+            <option value="'Cinzel', serif" {{#if (eq worldData.theme.fontFamily "'Cinzel', serif")}}selected{{/if}}>Cinzel</option>
+            <option value="'MedievalSharp', cursive" {{#if (eq worldData.theme.fontFamily "'MedievalSharp', cursive")}}selected{{/if}}>MedievalSharp</option>
+            <option value="'Uncial Antiqua', cursive" {{#if (eq worldData.theme.fontFamily "'Uncial Antiqua', cursive")}}selected{{/if}}>Uncial Antiqua</option>
+            <option value="Arial, sans-serif" {{#if (eq worldData.theme.fontFamily "Arial, sans-serif")}}selected{{/if}}>Arial</option>
+            <option value="Georgia, serif" {{#if (eq worldData.theme.fontFamily "Georgia, serif")}}selected{{/if}}>Georgia</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Background Color (Top):</label>
+          <input type="color" name="theme.bgColor1" value="{{worldData.theme.bgColor1}}">
+        </div>
+
+        <div class="form-group">
+          <label>Background Color (Bottom):</label>
+          <input type="color" name="theme.bgColor2" value="{{worldData.theme.bgColor2}}">
+        </div>
+
+        <div class="form-group">
+          <label>Text Color:</label>
+          <input type="color" name="theme.textColor" value="{{worldData.theme.textColor}}">
+        </div>
+
+        <div class="form-group">
+          <label>Heading Color:</label>
+          <input type="color" name="theme.headingColor" value="{{worldData.theme.headingColor}}">
+        </div>
+
+        <div class="form-group">
+          <label>Table Background:</label>
+          <input type="color" name="theme.tableBg" value="{{worldData.theme.tableBg}}">
+        </div>
+
+        <div class="form-group">
+          <label>Table Border Color:</label>
+          <input type="color" name="theme.tableBorder" value="{{worldData.theme.tableBorder}}">
+        </div>
+
+        <div class="form-group">
+          <label>Positive Renown Color (Start):</label>
+          <input type="color" name="theme.positiveColor1" value="{{worldData.theme.positiveColor1}}">
+        </div>
+
+        <div class="form-group">
+          <label>Positive Renown Color (End):</label>
+          <input type="color" name="theme.positiveColor2" value="{{worldData.theme.positiveColor2}}">
+        </div>
+
+        <div class="form-group">
+          <label>Neutral Renown Color (Start):</label>
+          <input type="color" name="theme.neutralColor1" value="{{worldData.theme.neutralColor1}}">
+        </div>
+
+        <div class="form-group">
+          <label>Neutral Renown Color (End):</label>
+          <input type="color" name="theme.neutralColor2" value="{{worldData.theme.neutralColor2}}">
+        </div>
+
+        <div class="form-group">
+          <label>Negative Renown Color (Start):</label>
+          <input type="color" name="theme.negativeColor1" value="{{worldData.theme.negativeColor1}}">
+        </div>
+
+        <div class="form-group">
+          <label>Negative Renown Color (End):</label>
+          <input type="color" name="theme.negativeColor2" value="{{worldData.theme.negativeColor2}}">
+        </div>
+      </div>
+    </div>
+
+    <!-- Factions & Cities Tab -->
+    <div class="tab" data-tab="factions" data-group="admin-tabs">
+      <div class="faction-controls">
+        <button type="button" class="add-faction">+ Add Faction/City</button>
+        <button type="button" class="load-default-world">Load Default World</button>
+      </div>
+      <div id="factionsList" class="factions-list">
+        <!-- Factions will be dynamically rendered here -->
+      </div>
+    </div>
+
+    <!-- Relationships Tab -->
+    <div class="tab" data-tab="relationships" data-group="admin-tabs">
+      <div class="relationship-controls">
+        <button type="button" class="show-graph">📊 View Relationship Graph</button>
+      </div>
+      <div id="relationshipsList" class="relationships-list">
+        <!-- Relationships will be dynamically rendered here -->
+      </div>
+    </div>
+  </section>
+
+  <footer class="form-footer">
+    <button type="button" class="save-world">Save World Configuration</button>
+    <button type="button" class="export-world">Export World to JSON</button>
+    <button type="button" class="import-world">Import World from JSON</button>
+    <input type="file" id="importFile" style="display: none;" accept=".json">
+  </footer>
+</form>
+
+<!-- Relationship Graph Modal -->
+<div id="graphModal" class="graph-modal" style="display: none;">
+  <div class="graph-modal-content">
+    <span class="close-graph-modal">&times;</span>
+    <h2>Relationship Graph</h2>
+    <div class="graph-legend">
+      <strong>Legend:</strong>
+      <span style="color: #4a9eff; margin-left: 20px;">🔵 Faction</span>
+      <span style="color: #ffdd8b; margin-left: 20px;">🟡 City</span>
+      <span style="color: #28a745; margin-left: 20px;">━━━ Friends</span>
+      <span style="color: #dc3545; margin-left: 20px;">━━━ Enemies</span>
+    </div>
+    <div id="relationshipGraph" class="relationship-graph-container"></div>
+  </div>
+</div>
+
+<!-- Suggestions Modal -->
+<div id="suggestionsModal" class="suggestions-modal" style="display: none;">
+  <div class="suggestions-modal-content">
+    <span class="close-suggestions-modal">&times;</span>
+    <h2 id="suggestionsTitle">Bonus Suggestions</h2>
+    <div id="suggestionsContent"></div>
+  </div>
+</div>
+

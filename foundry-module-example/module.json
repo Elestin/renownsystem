@@ -22,13 +22,6 @@
     "templates/renown-tracker.html",
     "templates/admin-config.html"
   ],
-  "languages": [
-    {
-      "lang": "en",
-      "name": "English",
-      "path": "lang/en.json"
-    }
-  ],
   "socket": true,
   "url": "https://github.com/yourusername/renown-system",
   "manifest": "https://github.com/yourusername/renown-system/releases/latest/download/module.json",
