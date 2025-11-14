@@ -3,6 +3,9 @@
  * Main module file
  */
 
+// Import the Regional Factions Manager
+// Note: In Foundry, we'll load this via module.json
+
 Hooks.once('init', () => {
   console.log('Renown System | Initializing...');
   
@@ -36,6 +39,18 @@ Hooks.once('init', () => {
     config: false,
     type: Object,
     default: {}
+  });
+
+  game.settings.register('renown-system', 'regionalData', {
+    name: 'Regional Power Data',
+    hint: 'Stores regional faction power dynamics data',
+    scope: 'world',
+    config: false,
+    type: Object,
+    default: {
+      regions: {},
+      factionDetails: {}
+    }
   });
 
   // Register module settings menu
@@ -595,8 +610,10 @@ class RenownAdminConfig extends FormApplication {
     super(options);
     this.worldData = null;
     this.graphNetwork = null;
+    this.regionalFactionsManager = new RegionalFactionsManager();
+    this.regionalData = null;
     this.availableDescriptors = [
-      "Pirate", "Naval", "Merchant", "Religious", "Criminal", "Military", 
+      "Pirate", "Naval", "Merchant", "Religious", "Criminal", "Military",
       "Magical", "Noble", "Cult", "City", "Trading", "Warrior", "Scholar",
       "Assassin", "Thief", "Mercenary", "Explorer", "Diplomat", "Artisan",
       "Mystical", "Ancient", "Corrupt", "Lawful", "Chaotic", "Neutral"
@@ -643,6 +660,11 @@ class RenownAdminConfig extends FormApplication {
       html.find('.tab').removeClass('active');
       $(event.currentTarget).addClass('active');
       html.find(`.tab[data-tab="${tab}"]`).addClass('active');
+
+      // Render regional factions when that tab is selected
+      if (tab === 'regional') {
+        this.renderRegionalFactions(html);
+      }
     });
 
     // Buttons
@@ -2101,6 +2123,490 @@ class RenownAdminConfig extends FormApplication {
         }
       }
     };
+  }
+
+  //========================================
+  // Regional Factions Methods
+  //========================================
+
+  loadRegionalData() {
+    this.regionalData = game.settings.get('renown-system', 'regionalData');
+    if (!this.regionalData || !this.regionalData.regions) {
+      this.regionalData = RegionalFactionsManager.getDefaultRegionalData();
+      game.settings.set('renown-system', 'regionalData', this.regionalData);
+    }
+  }
+
+  async saveRegionalData() {
+    await game.settings.set('renown-system', 'regionalData', this.regionalData);
+    // Broadcast to other players
+    if (game.user.isGM) {
+      game.socket.emit('module.renown-system', {
+        type: 'regionalUpdate',
+        regionalData: this.regionalData
+      });
+    }
+  }
+
+  renderRegionalFactions(html) {
+    this.loadRegionalData();
+    this.loadWorldData();
+
+    const container = html.find('#regionalFactionsContent');
+    container.empty();
+
+    const contentHtml = $(`
+      <div class="regional-factions-container">
+        <div class="regional-factions-header">
+          <h2>Regional Power Dynamics</h2>
+          <p class="help-text">
+            Manage regional authority, faction power distribution, and inter-faction relationships.
+            Power in each region is balanced: Faction Power + Authority = 100%
+          </p>
+        </div>
+
+        <!-- Region Management Section -->
+        <div class="section region-management">
+          <h3>Region Management</h3>
+          <div class="form-row">
+            <input type="text" id="new-region-name" placeholder="Enter region name..." />
+            <input type="number" id="new-region-authority" min="0" max="100" value="20" placeholder="Authority (0-100)" />
+            <button type="button" class="add-region-btn">
+              <i class="fas fa-plus"></i> Add Region
+            </button>
+          </div>
+        </div>
+
+        <!-- Faction Assignment Section -->
+        <div class="section faction-assignment">
+          <h3>Assign Faction to Region</h3>
+          <div class="form-row">
+            <select id="faction-select-for-region" class="faction-select">
+              <option value="">Select Faction...</option>
+              ${(this.worldData.factions || []).map(f => `<option value="${f.name}">${f.name}</option>`).join('')}
+            </select>
+            <select id="region-select-for-faction" class="region-select">
+              <option value="">Select Region...</option>
+            </select>
+            <button type="button" class="assign-faction-btn">
+              <i class="fas fa-map-marker-alt"></i> Assign Faction
+            </button>
+          </div>
+          <div class="form-row">
+            <input type="text" id="faction-leader" placeholder="Leader (optional)" />
+            <input type="text" id="faction-description" placeholder="Description (optional)" />
+            <input type="text" id="faction-goals" placeholder="Goals (optional)" />
+          </div>
+        </div>
+
+        <!-- Interaction Setup Section -->
+        <div class="section interaction-setup">
+          <h3>Set Faction Interactions</h3>
+          <div class="form-row">
+            <select id="faction-a-select" class="faction-region-select">
+              <option value="">Select Faction A...</option>
+            </select>
+            <select id="interaction-type-select">
+              <option value="war">War (-10 power effect)</option>
+              <option value="alliance">Alliance (+5 power effect)</option>
+              <option value="trade">Trade Agreement (+3 power effect)</option>
+            </select>
+            <select id="faction-b-select" class="faction-region-select">
+              <option value="">Select Faction B...</option>
+            </select>
+            <button type="button" class="set-interaction-btn">
+              <i class="fas fa-handshake"></i> Set Interaction
+            </button>
+          </div>
+        </div>
+
+        <!-- Regions Display -->
+        <div class="regions-display">
+          <div class="section-controls">
+            <button type="button" class="roll-dice-btn">
+              <i class="fas fa-dice"></i> Roll Dice (Simulate Power Changes)
+            </button>
+            <button type="button" class="export-regional-btn">
+              <i class="fas fa-download"></i> Export Regional Data
+            </button>
+            <button type="button" class="import-regional-btn">
+              <i class="fas fa-upload"></i> Import Regional Data
+            </button>
+            <input type="file" id="import-regional-file" accept=".json" style="display: none;" />
+          </div>
+
+          <div id="regions-container" class="regions-grid">
+            <!-- Regions will be dynamically rendered here -->
+          </div>
+        </div>
+
+        <!-- Event Log Section -->
+        <div class="section event-log-section">
+          <h3>Event Log</h3>
+          <div class="event-log-controls">
+            <button type="button" class="clear-log-btn">
+              <i class="fas fa-trash"></i> Clear Log
+            </button>
+          </div>
+          <div id="event-log" class="event-log">
+            <p class="no-events">No events yet. Roll the dice to simulate power changes.</p>
+          </div>
+        </div>
+      </div>
+    `);
+
+    container.append(contentHtml);
+
+    // Update region select options
+    this.updateRegionSelects(container);
+
+    // Update faction interaction selects
+    this.updateFactionInteractionSelects(container);
+
+    // Render regions
+    this.renderRegions(container);
+
+    // Attach event handlers
+    this.attachRegionalEventHandlers(container);
+  }
+
+  updateRegionSelects(container) {
+    const regionSelect = container.find('#region-select-for-faction');
+    regionSelect.empty();
+    regionSelect.append('<option value="">Select Region...</option>');
+
+    for (const regionName in this.regionalData.regions) {
+      regionSelect.append(`<option value="${regionName}">${regionName}</option>`);
+    }
+  }
+
+  updateFactionInteractionSelects(container) {
+    const factionASelect = container.find('#faction-a-select');
+    const factionBSelect = container.find('#faction-b-select');
+
+    factionASelect.empty();
+    factionBSelect.empty();
+
+    factionASelect.append('<option value="">Select Faction A...</option>');
+    factionBSelect.append('<option value="">Select Faction B...</option>');
+
+    for (const regionName in this.regionalData.regions) {
+      const region = this.regionalData.regions[regionName];
+      region.factions.forEach(faction => {
+        const optionValue = `${regionName}:${faction.name}`;
+        const optionText = `${faction.name} (${regionName})`;
+        factionASelect.append(`<option value="${optionValue}">${optionText}</option>`);
+        factionBSelect.append(`<option value="${optionValue}">${optionText}</option>`);
+      });
+    }
+  }
+
+  renderRegions(container) {
+    const regionsContainer = container.find('#regions-container');
+    regionsContainer.empty();
+
+    if (Object.keys(this.regionalData.regions).length === 0) {
+      regionsContainer.html('<p style="padding: 20px; text-align: center; opacity: 0.7;">No regions defined. Add a region to get started.</p>');
+      return;
+    }
+
+    for (const regionName in this.regionalData.regions) {
+      const region = this.regionalData.regions[regionName];
+      const regionCard = this.createRegionCard(regionName, region);
+      regionsContainer.append(regionCard);
+    }
+  }
+
+  createRegionCard(regionName, region) {
+    const factionsList = region.factions.map(faction => {
+      const interactionsList = faction.interactions.map(interaction => {
+        const interactionClass = `interaction-type-${interaction.type}`;
+        return `
+          <li class="interaction-item ${interactionClass}">
+            <span>${this.regionalFactionsManager.interactions[interaction.type].description} ${interaction.target} (${interaction.region})</span>
+            <button type="button" class="remove-interaction-btn" data-region="${regionName}" data-faction="${faction.name}"
+                    data-target-region="${interaction.region}" data-target-faction="${interaction.target}">×</button>
+          </li>
+        `;
+      }).join('');
+
+      return `
+        <div class="faction-item">
+          <div class="faction-item-header">
+            <h5>${faction.name}</h5>
+            <button type="button" class="remove-faction-btn" data-region="${regionName}" data-faction="${faction.name}">×</button>
+          </div>
+          <div class="faction-power">
+            <div class="power-bar">
+              <div class="power-fill" style="width: ${faction.power}%"></div>
+              <div class="power-text">${faction.power.toFixed(1)}%</div>
+            </div>
+          </div>
+          <div class="faction-details">
+            <p><strong>Leader:</strong> ${faction.leader || 'Unknown'}</p>
+            <p><strong>Description:</strong> ${faction.description || 'No description'}</p>
+            <p><strong>Goals:</strong> ${faction.goals || 'No goals'}</p>
+          </div>
+          ${faction.interactions.length > 0 ? `
+            <div class="faction-interactions">
+              <strong>Interactions:</strong>
+              <ul class="interaction-list">
+                ${interactionsList}
+              </ul>
+            </div>
+          ` : ''}
+        </div>
+      `;
+    }).join('');
+
+    return $(`
+      <div class="region-card">
+        <div class="region-header">
+          <h4>${regionName}</h4>
+          <div class="region-controls">
+            <button type="button" class="remove-region-btn" data-region="${regionName}" title="Remove Region">
+              <i class="fas fa-trash"></i>
+            </button>
+          </div>
+        </div>
+        <div class="authority-control">
+          <label>Authority/Lawfulness: <span class="authority-value">${region.authority}%</span></label>
+          <input type="range" class="authority-slider" data-region="${regionName}"
+                 min="0" max="100" value="${region.authority}" />
+          <div class="authority-display">
+            Faction Power Available: ${(100 - region.authority).toFixed(0)}%
+          </div>
+        </div>
+        <div class="faction-list">
+          ${factionsList.length > 0 ? factionsList : '<p style="opacity: 0.7; font-size: 0.9em;">No factions in this region</p>'}
+        </div>
+      </div>
+    `);
+  }
+
+  attachRegionalEventHandlers(container) {
+    // Add region button
+    container.find('.add-region-btn').on('click', () => {
+      const regionName = container.find('#new-region-name').val().trim();
+      const authority = parseInt(container.find('#new-region-authority').val()) || 20;
+
+      if (!regionName) {
+        ui.notifications.warn('Please enter a region name.');
+        return;
+      }
+
+      if (this.regionalData.regions[regionName]) {
+        ui.notifications.warn('Region already exists.');
+        return;
+      }
+
+      this.regionalFactionsManager.setRegion(this.regionalData, regionName, authority);
+      this.saveRegionalData();
+      this.renderRegionalFactions(container.closest('.renown-admin-config'));
+      ui.notifications.info(`Region "${regionName}" added.`);
+    });
+
+    // Assign faction button
+    container.find('.assign-faction-btn').on('click', () => {
+      const factionName = container.find('#faction-select-for-region').val();
+      const regionName = container.find('#region-select-for-faction').val();
+      const leader = container.find('#faction-leader').val().trim();
+      const description = container.find('#faction-description').val().trim();
+      const goals = container.find('#faction-goals').val().trim();
+
+      if (!factionName || !regionName) {
+        ui.notifications.warn('Please select both a faction and a region.');
+        return;
+      }
+
+      // Check if faction already exists in this region
+      const region = this.regionalData.regions[regionName];
+      if (region && region.factions.find(f => f.name === factionName)) {
+        ui.notifications.warn('Faction already exists in this region.');
+        return;
+      }
+
+      this.regionalFactionsManager.addFactionToRegion(this.regionalData, regionName, factionName, {
+        leader,
+        description,
+        goals
+      });
+      this.saveRegionalData();
+      this.renderRegionalFactions(container.closest('.renown-admin-config'));
+      ui.notifications.info(`Faction "${factionName}" assigned to "${regionName}".`);
+
+      // Clear input fields
+      container.find('#faction-leader').val('');
+      container.find('#faction-description').val('');
+      container.find('#faction-goals').val('');
+    });
+
+    // Set interaction button
+    container.find('.set-interaction-btn').on('click', () => {
+      const factionAValue = container.find('#faction-a-select').val();
+      const factionBValue = container.find('#faction-b-select').val();
+      const interactionType = container.find('#interaction-type-select').val();
+
+      if (!factionAValue || !factionBValue) {
+        ui.notifications.warn('Please select both factions.');
+        return;
+      }
+
+      const [regionA, factionA] = factionAValue.split(':');
+      const [regionB, factionB] = factionBValue.split(':');
+
+      if (regionA === regionB && factionA === factionB) {
+        ui.notifications.warn('Cannot create interaction with the same faction.');
+        return;
+      }
+
+      this.regionalFactionsManager.setInteraction(this.regionalData, regionA, factionA, regionB, factionB, interactionType);
+      this.saveRegionalData();
+      this.renderRegionalFactions(container.closest('.renown-admin-config'));
+      ui.notifications.info(`Interaction set between "${factionA}" and "${factionB}".`);
+    });
+
+    // Roll dice button
+    container.find('.roll-dice-btn').on('click', () => {
+      const logEntries = this.regionalFactionsManager.rollDice(this.regionalData);
+      this.saveRegionalData();
+      this.renderRegionalFactions(container.closest('.renown-admin-config'));
+
+      // Display log entries
+      const eventLog = container.find('#event-log');
+      eventLog.empty();
+
+      if (logEntries.length > 0) {
+        logEntries.forEach(entry => {
+          eventLog.append(`<div class="event-entry"><span class="event-region">[${entry.region}]</span> ${entry.message}</div>`);
+        });
+      } else {
+        eventLog.html('<p class="no-events">No significant changes occurred.</p>');
+      }
+
+      ui.notifications.info('Power dynamics updated!');
+    });
+
+    // Clear log button
+    container.find('.clear-log-btn').on('click', () => {
+      this.regionalFactionsManager.clearEventLog();
+      container.find('#event-log').html('<p class="no-events">No events yet. Roll the dice to simulate power changes.</p>');
+    });
+
+    // Export regional data button
+    container.find('.export-regional-btn').on('click', () => {
+      const jsonData = this.regionalFactionsManager.exportData(this.regionalData);
+      const blob = new Blob([jsonData], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'regional-factions-data.json';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      ui.notifications.info('Regional data exported!');
+    });
+
+    // Import regional data button
+    container.find('.import-regional-btn').on('click', () => {
+      container.find('#import-regional-file').click();
+    });
+
+    container.find('#import-regional-file').on('change', (event) => {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const importedData = this.regionalFactionsManager.importData(e.target.result);
+          if (importedData) {
+            this.regionalData = importedData;
+            this.saveRegionalData();
+            this.renderRegionalFactions(container.closest('.renown-admin-config'));
+            ui.notifications.info('Regional data imported successfully!');
+          } else {
+            ui.notifications.error('Failed to import regional data. Invalid format.');
+          }
+        } catch (error) {
+          console.error('Import error:', error);
+          ui.notifications.error('Error importing regional data.');
+        }
+      };
+      reader.readAsText(file);
+    });
+
+    // Authority slider
+    container.find('.authority-slider').on('input', (event) => {
+      const slider = $(event.currentTarget);
+      const regionName = slider.data('region');
+      const authority = parseInt(slider.val());
+
+      slider.closest('.authority-control').find('.authority-value').text(`${authority}%`);
+      slider.closest('.authority-control').find('.authority-display').html(`Faction Power Available: ${(100 - authority).toFixed(0)}%`);
+    });
+
+    container.find('.authority-slider').on('change', (event) => {
+      const regionName = $(event.currentTarget).data('region');
+      const authority = parseInt($(event.currentTarget).val());
+
+      this.regionalData.regions[regionName].authority = authority;
+      this.regionalFactionsManager.balancePower(this.regionalData, regionName);
+      this.saveRegionalData();
+      this.renderRegionalFactions(container.closest('.renown-admin-config'));
+      ui.notifications.info(`Authority for "${regionName}" updated to ${authority}%.`);
+    });
+
+    // Remove region button
+    container.find('.remove-region-btn').on('click', (event) => {
+      const regionName = $(event.currentTarget).data('region');
+
+      Dialog.confirm({
+        title: 'Remove Region',
+        content: `<p>Are you sure you want to remove the region "<strong>${regionName}</strong>" and all its factions?</p>`,
+        yes: () => {
+          this.regionalFactionsManager.removeRegion(this.regionalData, regionName);
+          this.saveRegionalData();
+          this.renderRegionalFactions(container.closest('.renown-admin-config'));
+          ui.notifications.info(`Region "${regionName}" removed.`);
+        },
+        no: () => {},
+        defaultYes: false
+      });
+    });
+
+    // Remove faction button
+    container.find('.remove-faction-btn').on('click', (event) => {
+      const regionName = $(event.currentTarget).data('region');
+      const factionName = $(event.currentTarget).data('faction');
+
+      Dialog.confirm({
+        title: 'Remove Faction',
+        content: `<p>Are you sure you want to remove "<strong>${factionName}</strong>" from "<strong>${regionName}</strong>"?</p>`,
+        yes: () => {
+          this.regionalFactionsManager.removeFactionFromRegion(this.regionalData, regionName, factionName);
+          this.saveRegionalData();
+          this.renderRegionalFactions(container.closest('.renown-admin-config'));
+          ui.notifications.info(`Faction "${factionName}" removed from "${regionName}".`);
+        },
+        no: () => {},
+        defaultYes: false
+      });
+    });
+
+    // Remove interaction button
+    container.find('.remove-interaction-btn').on('click', (event) => {
+      const regionA = $(event.currentTarget).data('region');
+      const factionA = $(event.currentTarget).data('faction');
+      const regionB = $(event.currentTarget).data('target-region');
+      const factionB = $(event.currentTarget).data('target-faction');
+
+      this.regionalFactionsManager.removeInteraction(this.regionalData, regionA, factionA, regionB, factionB);
+      this.saveRegionalData();
+      this.renderRegionalFactions(container.closest('.renown-admin-config'));
+      ui.notifications.info('Interaction removed.');
+    });
   }
 }
 
