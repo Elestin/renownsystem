@@ -433,6 +433,7 @@
             <div class="tab active" onclick="switchTab(event, 'world')">World & Theme</div>
             <div class="tab" onclick="switchTab(event, 'factions')">Factions & Cities</div>
             <div class="tab" onclick="switchTab(event, 'relationships')">Relationships</div>
+            <div class="tab" onclick="switchTab(event, 'regional')">Regional Power</div>
         </div>
 
         <div id="tab-world" class="tab-content active">
@@ -543,6 +544,117 @@
                     <button onclick="showRelationshipGraph()">📊 View Relationship Graph</button>
                 </div>
                 <div id="relationshipsList"></div>
+            </div>
+        </div>
+
+        <div id="tab-regional" class="tab-content">
+            <div class="section">
+                <h2>Regional Power Dynamics</h2>
+                <p style="opacity: 0.8; line-height: 1.6; margin-bottom: 20px;">
+                    Manage regional authority, faction power distribution, and inter-faction relationships.
+                    Power in each region is balanced: <strong>Faction Power + Authority = 100%</strong>
+                </p>
+
+                <!-- Region Management -->
+                <div class="section" style="background: rgba(255, 255, 255, 0.02);">
+                    <h2 class="collapsible" onclick="toggleCollapse(this)">Region Management</h2>
+                    <div class="collapsible-content">
+                        <div class="form-group">
+                            <label>Region Name:</label>
+                            <input type="text" id="newRegionName" placeholder="Enter region name (e.g., Waterdeep)">
+                        </div>
+                        <div class="form-group">
+                            <label>Authority/Lawfulness (0-100%):</label>
+                            <input type="number" id="newRegionAuthority" min="0" max="100" value="20" placeholder="0-100">
+                            <small style="display: block; opacity: 0.7; margin-top: 5px;">
+                                Higher authority = stronger law enforcement, less faction power
+                            </small>
+                        </div>
+                        <button class="success" onclick="addRegion()">➕ Add Region</button>
+                    </div>
+                </div>
+
+                <!-- Faction Assignment -->
+                <div class="section" style="background: rgba(255, 255, 255, 0.02);">
+                    <h2 class="collapsible" onclick="toggleCollapse(this)">Assign Faction to Region</h2>
+                    <div class="collapsible-content">
+                        <div class="form-group">
+                            <label>Select Faction:</label>
+                            <select id="factionSelectForRegion">
+                                <option value="">Select Faction...</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Select Region:</label>
+                            <select id="regionSelectForFaction">
+                                <option value="">Select Region...</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Leader (optional):</label>
+                            <input type="text" id="factionLeader" placeholder="Leader name">
+                        </div>
+                        <div class="form-group">
+                            <label>Description (optional):</label>
+                            <input type="text" id="factionDescription" placeholder="What the faction does in this region">
+                        </div>
+                        <div class="form-group">
+                            <label>Goals (optional):</label>
+                            <input type="text" id="factionGoals" placeholder="What the faction wants to achieve">
+                        </div>
+                        <button class="success" onclick="assignFactionToRegion()">📍 Assign Faction</button>
+                    </div>
+                </div>
+
+                <!-- Faction Interactions -->
+                <div class="section" style="background: rgba(255, 255, 255, 0.02);">
+                    <h2 class="collapsible" onclick="toggleCollapse(this)">Set Faction Interactions</h2>
+                    <div class="collapsible-content">
+                        <div class="form-group">
+                            <label>Faction A:</label>
+                            <select id="factionASelect">
+                                <option value="">Select Faction A...</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Interaction Type:</label>
+                            <select id="interactionTypeSelect">
+                                <option value="war">War (-10 power effect)</option>
+                                <option value="alliance">Alliance (+5 power effect)</option>
+                                <option value="trade">Trade Agreement (+3 power effect)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Faction B:</label>
+                            <select id="factionBSelect">
+                                <option value="">Select Faction B...</option>
+                            </select>
+                        </div>
+                        <button class="success" onclick="setFactionInteraction()">🤝 Set Interaction</button>
+                    </div>
+                </div>
+
+                <!-- Power Simulation Controls -->
+                <div style="margin: 20px 0; display: flex; gap: 10px; flex-wrap: wrap;">
+                    <button onclick="rollDiceRegional()">🎲 Roll Dice (Simulate Power Changes)</button>
+                    <button onclick="exportRegionalData()">💾 Export Regional Data</button>
+                    <button onclick="importRegionalData()">📂 Import Regional Data</button>
+                    <input type="file" id="importRegionalFile" style="display: none;" accept=".json" onchange="handleRegionalImport(event)">
+                </div>
+
+                <!-- Regions Display -->
+                <div id="regionsContainer"></div>
+
+                <!-- Event Log -->
+                <div class="section" style="background: rgba(255, 255, 255, 0.02); margin-top: 20px;">
+                    <h2 class="collapsible" onclick="toggleCollapse(this)">Event Log</h2>
+                    <div class="collapsible-content">
+                        <button onclick="clearEventLog()" style="float: right;">🗑️ Clear Log</button>
+                        <div id="eventLog" style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 5px; max-height: 300px; overflow-y: auto; margin-top: 10px;">
+                            <p style="opacity: 0.6; font-style: italic; text-align: center;">No events yet. Roll the dice to simulate power changes.</p>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -729,6 +841,7 @@
             updateColorPreviews();
             renderFactions();
             renderRelationships();
+            renderRegions();
         }
 
         function updateColorPreviews() {
@@ -1966,7 +2079,566 @@
             }
         }
 
+        //========================================
+        // REGIONAL POWER DYNAMICS
+        //========================================
+
+        // Regional data storage
+        let regionalData = {
+            regions: {},
+            factionDetails: {}
+        };
+
+        // Regional Factions Manager (standalone version)
+        class RegionalFactionsManager {
+            constructor() {
+                this.interactions = {
+                    war: { powerEffect: -10, description: 'is at war with' },
+                    alliance: { powerEffect: 5, description: 'is allied with' },
+                    trade: { powerEffect: 3, description: 'has a trade agreement with' }
+                };
+                this.eventLog = [];
+            }
+
+            setRegion(regionalData, regionName, authority = 0) {
+                if (!regionalData.regions[regionName]) {
+                    regionalData.regions[regionName] = {
+                        authority: authority,
+                        factions: []
+                    };
+                } else {
+                    regionalData.regions[regionName].authority = authority;
+                }
+                return regionalData;
+            }
+
+            addFactionToRegion(regionalData, regionName, factionName, details = {}) {
+                if (!regionalData.regions[regionName]) {
+                    this.setRegion(regionalData, regionName, 0);
+                }
+
+                const faction = {
+                    name: factionName,
+                    power: 50,
+                    interactions: [],
+                    leader: details.leader || 'Unknown',
+                    description: details.description || 'No description',
+                    goals: details.goals || 'No goals'
+                };
+
+                regionalData.regions[regionName].factions.push(faction);
+
+                if (!regionalData.factionDetails[factionName]) {
+                    regionalData.factionDetails[factionName] = { regions: [] };
+                }
+                regionalData.factionDetails[factionName].regions.push(regionName);
+
+                this.balancePower(regionalData, regionName);
+                return regionalData;
+            }
+
+            removeFactionFromRegion(regionalData, regionName, factionName) {
+                if (!regionalData.regions[regionName]) return regionalData;
+
+                const index = regionalData.regions[regionName].factions.findIndex(f => f.name === factionName);
+                if (index !== -1) {
+                    regionalData.regions[regionName].factions.splice(index, 1);
+
+                    if (regionalData.factionDetails[factionName]) {
+                        const regionIndex = regionalData.factionDetails[factionName].regions.indexOf(regionName);
+                        if (regionIndex !== -1) {
+                            regionalData.factionDetails[factionName].regions.splice(regionIndex, 1);
+                        }
+                        if (regionalData.factionDetails[factionName].regions.length === 0) {
+                            delete regionalData.factionDetails[factionName];
+                        }
+                    }
+
+                    this.balancePower(regionalData, regionName);
+                }
+                return regionalData;
+            }
+
+            setInteraction(regionalData, regionA, factionA, regionB, factionB, type) {
+                if (!this.interactions[type]) return regionalData;
+
+                const factionAObj = this.getFaction(regionalData, regionA, factionA);
+                const factionBObj = this.getFaction(regionalData, regionB, factionB);
+
+                if (factionAObj && factionBObj) {
+                    const existingA = factionAObj.interactions.findIndex(i => i.target === factionB && i.region === regionB);
+                    const existingB = factionBObj.interactions.findIndex(i => i.target === factionA && i.region === regionA);
+
+                    if (existingA !== -1) {
+                        factionAObj.interactions[existingA].type = type;
+                    } else {
+                        factionAObj.interactions.push({ type: type, target: factionB, region: regionB });
+                    }
+
+                    if (existingB !== -1) {
+                        factionBObj.interactions[existingB].type = type;
+                    } else {
+                        factionBObj.interactions.push({ type: type, target: factionA, region: regionA });
+                    }
+                }
+                return regionalData;
+            }
+
+            removeInteraction(regionalData, regionA, factionA, regionB, factionB) {
+                const factionAObj = this.getFaction(regionalData, regionA, factionA);
+                const factionBObj = this.getFaction(regionalData, regionB, factionB);
+
+                if (factionAObj) {
+                    factionAObj.interactions = factionAObj.interactions.filter(i => !(i.target === factionB && i.region === regionB));
+                }
+                if (factionBObj) {
+                    factionBObj.interactions = factionBObj.interactions.filter(i => !(i.target === factionA && i.region === regionA));
+                }
+                return regionalData;
+            }
+
+            getFaction(regionalData, regionName, factionName) {
+                if (!regionalData.regions[regionName]) return null;
+                return regionalData.regions[regionName].factions.find(f => f.name === factionName);
+            }
+
+            balancePower(regionalData, regionName) {
+                const region = regionalData.regions[regionName];
+                if (!region) return regionalData;
+
+                const totalFactions = region.factions.length;
+                const availablePower = 100 - region.authority;
+
+                if (totalFactions > 0 && availablePower >= 0) {
+                    let totalPower = region.factions.reduce((sum, faction) => sum + faction.power, 0);
+
+                    if (totalPower > availablePower) {
+                        region.factions.forEach(faction => {
+                            faction.power = (faction.power / totalPower) * availablePower;
+                        });
+                    } else if (totalPower < availablePower) {
+                        const powerPerFaction = availablePower / totalFactions;
+                        region.factions.forEach(faction => faction.power = powerPerFaction);
+                    }
+                }
+                return regionalData;
+            }
+
+            rollDice(regionalData) {
+                const logEntries = [];
+
+                for (const regionName in regionalData.regions) {
+                    const region = regionalData.regions[regionName];
+                    const totalPower = 100 - region.authority;
+
+                    if (region.factions.length > 1) {
+                        region.factions.forEach(faction => {
+                            const powerChange = Math.floor(Math.random() * 21) - 10;
+                            faction.power += powerChange;
+                            if (faction.power < 0) faction.power = 0;
+
+                            logEntries.push({
+                                region: regionName,
+                                message: `${faction.name} power changed by ${powerChange > 0 ? '+' : ''}${powerChange}`
+                            });
+
+                            faction.interactions.forEach(interaction => {
+                                const effect = this.interactions[interaction.type];
+                                const targetFaction = this.getFaction(regionalData, interaction.region, interaction.target);
+
+                                if (targetFaction && effect) {
+                                    faction.power += effect.powerEffect;
+                                    logEntries.push({
+                                        region: regionName,
+                                        message: `${faction.name} ${effect.description} ${targetFaction.name}`
+                                    });
+                                }
+                            });
+                        });
+
+                        let currentTotalPower = region.factions.reduce((sum, faction) => sum + faction.power, 0);
+                        let iterations = 0;
+                        const maxIterations = 100;
+
+                        while (Math.abs(currentTotalPower - totalPower) > 0.1 && iterations < maxIterations) {
+                            const difference = currentTotalPower - totalPower;
+                            const adjustFaction = region.factions[Math.floor(Math.random() * region.factions.length)];
+
+                            adjustFaction.power -= difference / region.factions.length;
+                            if (adjustFaction.power < 0) adjustFaction.power = 0;
+
+                            currentTotalPower = region.factions.reduce((sum, faction) => sum + faction.power, 0);
+                            iterations++;
+                        }
+
+                        this.balancePower(regionalData, regionName);
+                    }
+                }
+
+                this.eventLog = [...this.eventLog, ...logEntries];
+                return logEntries;
+            }
+
+            clearEventLog() {
+                this.eventLog = [];
+            }
+        }
+
+        const regionalFactionsManager = new RegionalFactionsManager();
+
+        // Load regional data from localStorage
+        function loadRegionalData() {
+            const saved = localStorage.getItem("regionalData");
+            if (saved) {
+                try {
+                    regionalData = JSON.parse(saved);
+                } catch (e) {
+                    console.error("Error loading regional data:", e);
+                    regionalData = { regions: {}, factionDetails: {} };
+                }
+            }
+        }
+
+        // Save regional data to localStorage
+        function saveRegionalData() {
+            localStorage.setItem("regionalData", JSON.stringify(regionalData));
+        }
+
+        // Add region
+        function addRegion() {
+            const regionName = document.getElementById("newRegionName").value.trim();
+            const authority = parseInt(document.getElementById("newRegionAuthority").value) || 20;
+
+            if (!regionName) {
+                showMessage("Please enter a region name", "error");
+                return;
+            }
+
+            if (regionalData.regions[regionName]) {
+                showMessage("Region already exists", "error");
+                return;
+            }
+
+            regionalFactionsManager.setRegion(regionalData, regionName, authority);
+            saveRegionalData();
+            renderRegions();
+            showMessage(`Region "${regionName}" added`, "success");
+
+            document.getElementById("newRegionName").value = "";
+        }
+
+        // Assign faction to region
+        function assignFactionToRegion() {
+            const factionName = document.getElementById("factionSelectForRegion").value;
+            const regionName = document.getElementById("regionSelectForFaction").value;
+            const leader = document.getElementById("factionLeader").value.trim();
+            const description = document.getElementById("factionDescription").value.trim();
+            const goals = document.getElementById("factionGoals").value.trim();
+
+            if (!factionName || !regionName) {
+                showMessage("Please select both a faction and a region", "error");
+                return;
+            }
+
+            const region = regionalData.regions[regionName];
+            if (region && region.factions.find(f => f.name === factionName)) {
+                showMessage("Faction already exists in this region", "error");
+                return;
+            }
+
+            regionalFactionsManager.addFactionToRegion(regionalData, regionName, factionName, {
+                leader, description, goals
+            });
+
+            saveRegionalData();
+            renderRegions();
+            showMessage(`Faction "${factionName}" assigned to "${regionName}"`, "success");
+
+            document.getElementById("factionLeader").value = "";
+            document.getElementById("factionDescription").value = "";
+            document.getElementById("factionGoals").value = "";
+        }
+
+        // Set faction interaction
+        function setFactionInteraction() {
+            const factionAValue = document.getElementById("factionASelect").value;
+            const factionBValue = document.getElementById("factionBSelect").value;
+            const interactionType = document.getElementById("interactionTypeSelect").value;
+
+            if (!factionAValue || !factionBValue) {
+                showMessage("Please select both factions", "error");
+                return;
+            }
+
+            const [regionA, factionA] = factionAValue.split(':');
+            const [regionB, factionB] = factionBValue.split(':');
+
+            if (regionA === regionB && factionA === factionB) {
+                showMessage("Cannot create interaction with the same faction", "error");
+                return;
+            }
+
+            regionalFactionsManager.setInteraction(regionalData, regionA, factionA, regionB, factionB, interactionType);
+            saveRegionalData();
+            renderRegions();
+            showMessage(`Interaction set between "${factionA}" and "${factionB}"`, "success");
+        }
+
+        // Roll dice for power simulation
+        function rollDiceRegional() {
+            const logEntries = regionalFactionsManager.rollDice(regionalData);
+            saveRegionalData();
+            renderRegions();
+
+            const eventLog = document.getElementById("eventLog");
+            eventLog.innerHTML = "";
+
+            if (logEntries.length > 0) {
+                logEntries.forEach(entry => {
+                    const div = document.createElement("div");
+                    div.style.padding = "6px";
+                    div.style.borderBottom = "1px solid rgba(255,255,255,0.1)";
+                    div.innerHTML = `<span style="font-weight: bold; color: #4a9eff;">[${entry.region}]</span> ${entry.message}`;
+                    eventLog.appendChild(div);
+                });
+            } else {
+                eventLog.innerHTML = '<p style="opacity: 0.6; font-style: italic; text-align: center;">No significant changes occurred.</p>';
+            }
+
+            showMessage("Power dynamics updated!", "success");
+        }
+
+        // Clear event log
+        function clearEventLog() {
+            regionalFactionsManager.clearEventLog();
+            document.getElementById("eventLog").innerHTML = '<p style="opacity: 0.6; font-style: italic; text-align: center;">No events yet. Roll the dice to simulate power changes.</p>';
+        }
+
+        // Export regional data
+        function exportRegionalData() {
+            const jsonData = JSON.stringify(regionalData, null, 2);
+            const blob = new Blob([jsonData], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'regional-factions-data.json';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showMessage("Regional data exported!", "success");
+        }
+
+        // Import regional data
+        function importRegionalData() {
+            document.getElementById("importRegionalFile").click();
+        }
+
+        function handleRegionalImport(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const importedData = JSON.parse(e.target.result);
+                    regionalData = importedData;
+
+                    // Rebalance all regions
+                    for (const regionName in regionalData.regions) {
+                        regionalFactionsManager.balancePower(regionalData, regionName);
+                    }
+
+                    saveRegionalData();
+                    renderRegions();
+                    showMessage("Regional data imported successfully!", "success");
+                } catch (error) {
+                    console.error("Import error:", error);
+                    showMessage("Error importing regional data", "error");
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        // Render regions
+        function renderRegions() {
+            const container = document.getElementById("regionsContainer");
+            container.innerHTML = "";
+
+            // Update region/faction selects
+            updateRegionalSelects();
+
+            if (Object.keys(regionalData.regions).length === 0) {
+                container.innerHTML = '<p style="padding: 20px; text-align: center; opacity: 0.7;">No regions defined. Add a region to get started.</p>';
+                return;
+            }
+
+            for (const regionName in regionalData.regions) {
+                const region = regionalData.regions[regionName];
+                const regionCard = createRegionCard(regionName, region);
+                container.appendChild(regionCard);
+            }
+        }
+
+        function createRegionCard(regionName, region) {
+            const card = document.createElement("div");
+            card.style.cssText = "background: rgba(0,0,0,0.3); border: 1px solid #4a9eff; border-radius: 8px; padding: 15px; margin-bottom: 15px;";
+
+            let factionsHtml = "";
+            if (region.factions.length > 0) {
+                region.factions.forEach(faction => {
+                    let interactionsHtml = "";
+                    if (faction.interactions.length > 0) {
+                        interactionsHtml = `<div style="margin-top: 10px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.1);">
+                            <strong style="font-size: 0.9em;">Interactions:</strong>
+                            <ul style="margin: 5px 0; padding-left: 20px; font-size: 0.85em;">
+                                ${faction.interactions.map(int => {
+                                    const color = int.type === 'war' ? '#e74c3c' : int.type === 'alliance' ? '#3498db' : '#f39c12';
+                                    return `<li style="color: ${color};">
+                                        ${regionalFactionsManager.interactions[int.type].description} ${int.target} (${int.region})
+                                        <button onclick="removeInteraction('${regionName}', '${faction.name}', '${int.region}', '${int.target}')"
+                                                style="margin-left: 5px; padding: 1px 4px; font-size: 0.7em; background: rgba(255,0,0,0.3); border: 1px solid #ff0000; border-radius: 2px; color: #fff; cursor: pointer;">×</button>
+                                    </li>`;
+                                }).join('')}
+                            </ul>
+                        </div>`;
+                    }
+
+                    factionsHtml += `<div style="background: rgba(0,0,0,0.3); border: 1px solid rgba(74,158,255,0.3); border-radius: 6px; padding: 12px; margin-bottom: 10px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <h4 style="margin: 0; color: #4a9eff;">${faction.name}</h4>
+                            <button onclick="removeFactionFromRegion('${regionName}', '${faction.name}')"
+                                    style="padding: 2px 6px; font-size: 0.8em; background: rgba(255,0,0,0.3); border: 1px solid #ff0000; border-radius: 3px; color: #fff; cursor: pointer;">×</button>
+                        </div>
+                        <div style="margin: 10px 0;">
+                            <div style="width: 100%; height: 24px; background: rgba(0,0,0,0.4); border-radius: 4px; overflow: hidden; position: relative; border: 1px solid rgba(255,255,255,0.2);">
+                                <div style="height: 100%; width: ${faction.power}%; background: linear-gradient(90deg, #2ecc71, #27ae60); transition: width 0.4s ease;"></div>
+                                <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 0.85em; font-weight: bold; color: #fff; text-shadow: 1px 1px 3px rgba(0,0,0,0.8);">${faction.power.toFixed(1)}%</div>
+                            </div>
+                        </div>
+                        <div style="font-size: 0.85em; opacity: 0.95; line-height: 1.4;">
+                            <p style="margin: 4px 0;"><strong>Leader:</strong> ${faction.leader || 'Unknown'}</p>
+                            <p style="margin: 4px 0;"><strong>Description:</strong> ${faction.description || 'No description'}</p>
+                            <p style="margin: 4px 0;"><strong>Goals:</strong> ${faction.goals || 'No goals'}</p>
+                        </div>
+                        ${interactionsHtml}
+                    </div>`;
+                });
+            } else {
+                factionsHtml = '<p style="opacity: 0.7; font-size: 0.9em;">No factions in this region</p>';
+            }
+
+            card.innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid #4a9eff;">
+                    <h3 style="margin: 0; color: #4a9eff;">${regionName}</h3>
+                    <button onclick="removeRegion('${regionName}')"
+                            style="padding: 4px 8px; font-size: 0.9em; background: rgba(255,0,0,0.2); border: 1px solid #ff4444; border-radius: 4px; color: #ff6666; cursor: pointer;">
+                        🗑️ Remove
+                    </button>
+                </div>
+                <div style="margin-bottom: 15px; padding: 10px; background: rgba(0,0,0,0.2); border-radius: 6px;">
+                    <label style="display: block; font-size: 0.95em; margin-bottom: 8px;">
+                        Authority/Lawfulness: <span style="font-weight: bold; color: #4a9eff;">${region.authority}%</span>
+                    </label>
+                    <input type="range" min="0" max="100" value="${region.authority}"
+                           onchange="updateAuthority('${regionName}', this.value)"
+                           style="width: 100%; cursor: pointer;">
+                    <div style="text-align: center; font-size: 0.9em; margin-top: 6px; opacity: 0.8; font-style: italic;">
+                        Faction Power Available: ${(100 - region.authority).toFixed(0)}%
+                    </div>
+                </div>
+                ${factionsHtml}
+            `;
+
+            return card;
+        }
+
+        function updateAuthority(regionName, authority) {
+            authority = parseInt(authority);
+            regionalData.regions[regionName].authority = authority;
+            regionalFactionsManager.balancePower(regionalData, regionName);
+            saveRegionalData();
+            renderRegions();
+            showMessage(`Authority for "${regionName}" updated to ${authority}%`, "success");
+        }
+
+        function removeRegion(regionName) {
+            if (!confirm(`Are you sure you want to remove the region "${regionName}" and all its factions?`)) {
+                return;
+            }
+
+            delete regionalData.regions[regionName];
+            saveRegionalData();
+            renderRegions();
+            showMessage(`Region "${regionName}" removed`, "success");
+        }
+
+        function removeFactionFromRegion(regionName, factionName) {
+            if (!confirm(`Are you sure you want to remove "${factionName}" from "${regionName}"?`)) {
+                return;
+            }
+
+            regionalFactionsManager.removeFactionFromRegion(regionalData, regionName, factionName);
+            saveRegionalData();
+            renderRegions();
+            showMessage(`Faction "${factionName}" removed from "${regionName}"`, "success");
+        }
+
+        function removeInteraction(regionA, factionA, regionB, factionB) {
+            regionalFactionsManager.removeInteraction(regionalData, regionA, factionA, regionB, factionB);
+            saveRegionalData();
+            renderRegions();
+            showMessage("Interaction removed", "success");
+        }
+
+        function updateRegionalSelects() {
+            // Update faction select for region assignment
+            const factionSelect = document.getElementById("factionSelectForRegion");
+            factionSelect.innerHTML = '<option value="">Select Faction...</option>';
+            worldData.factions.forEach(faction => {
+                const option = document.createElement("option");
+                option.value = faction.name;
+                option.textContent = faction.name;
+                factionSelect.appendChild(option);
+            });
+
+            // Update region select
+            const regionSelect = document.getElementById("regionSelectForFaction");
+            regionSelect.innerHTML = '<option value="">Select Region...</option>';
+            for (const regionName in regionalData.regions) {
+                const option = document.createElement("option");
+                option.value = regionName;
+                option.textContent = regionName;
+                regionSelect.appendChild(option);
+            }
+
+            // Update faction interaction selects
+            const factionASelect = document.getElementById("factionASelect");
+            const factionBSelect = document.getElementById("factionBSelect");
+            factionASelect.innerHTML = '<option value="">Select Faction A...</option>';
+            factionBSelect.innerHTML = '<option value="">Select Faction B...</option>';
+
+            for (const regionName in regionalData.regions) {
+                const region = regionalData.regions[regionName];
+                region.factions.forEach(faction => {
+                    const optionValue = `${regionName}:${faction.name}`;
+                    const optionText = `${faction.name} (${regionName})`;
+
+                    const optionA = document.createElement("option");
+                    optionA.value = optionValue;
+                    optionA.textContent = optionText;
+                    factionASelect.appendChild(optionA);
+
+                    const optionB = document.createElement("option");
+                    optionB.value = optionValue;
+                    optionB.textContent = optionText;
+                    factionBSelect.appendChild(optionB);
+                });
+            }
+        }
+
         // Initialize
+        loadRegionalData();
         loadWorldData();
     </script>
 </body>
