@@ -13,6 +13,7 @@
     }
   ],
   "esmodules": [
+    "regional-factions.js",
     "renown-system.js"
   ],
   "styles": [
