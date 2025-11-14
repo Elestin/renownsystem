@@ -3,7 +3,7 @@
  * Manages regional authority, faction power, and interactions
  */
 
-class RegionalFactionsManager {
+window.RegionalFactionsManager = class RegionalFactionsManager {
     constructor() {
         this.interactions = {
             war: { powerEffect: -10, description: 'is at war with' },
@@ -372,9 +372,4 @@ class RegionalFactionsManager {
             interactionCount: region.factions.reduce((sum, f) => sum + f.interactions.length, 0)
         };
     }
-}
-
-// Export for use in both browser and Node.js environments
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = RegionalFactionsManager;
-}
+};
