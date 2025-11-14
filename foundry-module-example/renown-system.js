@@ -86,6 +86,14 @@ Hooks.once('ready', () => {
           app.render();
         }
       });
+    } else if (data.type === 'regionalUpdate' && !game.user.isGM) {
+      // Regional data updates
+      game.settings.set('renown-system', 'regionalData', data.regionalData);
+      Object.values(ui.windows).forEach(app => {
+        if (app instanceof RenownAdminConfig) {
+          app.render();
+        }
+      });
     }
   });
 });
@@ -2402,7 +2410,7 @@ class RenownAdminConfig extends FormApplication {
 
       this.regionalFactionsManager.setRegion(this.regionalData, regionName, authority);
       this.saveRegionalData();
-      this.renderRegionalFactions(container.closest('.renown-admin-config'));
+      this.renderRegionalFactions(this.element);
       ui.notifications.info(`Region "${regionName}" added.`);
     });
 
@@ -2432,7 +2440,7 @@ class RenownAdminConfig extends FormApplication {
         goals
       });
       this.saveRegionalData();
-      this.renderRegionalFactions(container.closest('.renown-admin-config'));
+      this.renderRegionalFactions(this.element);
       ui.notifications.info(`Faction "${factionName}" assigned to "${regionName}".`);
 
       // Clear input fields
@@ -2462,7 +2470,7 @@ class RenownAdminConfig extends FormApplication {
 
       this.regionalFactionsManager.setInteraction(this.regionalData, regionA, factionA, regionB, factionB, interactionType);
       this.saveRegionalData();
-      this.renderRegionalFactions(container.closest('.renown-admin-config'));
+      this.renderRegionalFactions(this.element);
       ui.notifications.info(`Interaction set between "${factionA}" and "${factionB}".`);
     });
 
@@ -2470,7 +2478,7 @@ class RenownAdminConfig extends FormApplication {
     container.find('.roll-dice-btn').on('click', () => {
       const logEntries = this.regionalFactionsManager.rollDice(this.regionalData);
       this.saveRegionalData();
-      this.renderRegionalFactions(container.closest('.renown-admin-config'));
+      this.renderRegionalFactions(this.element);
 
       // Display log entries
       const eventLog = container.find('#event-log');
@@ -2524,7 +2532,7 @@ class RenownAdminConfig extends FormApplication {
           if (importedData) {
             this.regionalData = importedData;
             this.saveRegionalData();
-            this.renderRegionalFactions(container.closest('.renown-admin-config'));
+            this.renderRegionalFactions(this.element);
             ui.notifications.info('Regional data imported successfully!');
           } else {
             ui.notifications.error('Failed to import regional data. Invalid format.');
@@ -2554,7 +2562,7 @@ class RenownAdminConfig extends FormApplication {
       this.regionalData.regions[regionName].authority = authority;
       this.regionalFactionsManager.balancePower(this.regionalData, regionName);
       this.saveRegionalData();
-      this.renderRegionalFactions(container.closest('.renown-admin-config'));
+      this.renderRegionalFactions(this.element);
       ui.notifications.info(`Authority for "${regionName}" updated to ${authority}%.`);
     });
 
@@ -2568,7 +2576,7 @@ class RenownAdminConfig extends FormApplication {
         yes: () => {
           this.regionalFactionsManager.removeRegion(this.regionalData, regionName);
           this.saveRegionalData();
-          this.renderRegionalFactions(container.closest('.renown-admin-config'));
+          this.renderRegionalFactions(this.element);
           ui.notifications.info(`Region "${regionName}" removed.`);
         },
         no: () => {},
@@ -2587,7 +2595,7 @@ class RenownAdminConfig extends FormApplication {
         yes: () => {
           this.regionalFactionsManager.removeFactionFromRegion(this.regionalData, regionName, factionName);
           this.saveRegionalData();
-          this.renderRegionalFactions(container.closest('.renown-admin-config'));
+          this.renderRegionalFactions(this.element);
           ui.notifications.info(`Faction "${factionName}" removed from "${regionName}".`);
         },
         no: () => {},
@@ -2604,7 +2612,7 @@ class RenownAdminConfig extends FormApplication {
 
       this.regionalFactionsManager.removeInteraction(this.regionalData, regionA, factionA, regionB, factionB);
       this.saveRegionalData();
-      this.renderRegionalFactions(container.closest('.renown-admin-config'));
+      this.renderRegionalFactions(this.element);
       ui.notifications.info('Interaction removed.');
     });
   }
